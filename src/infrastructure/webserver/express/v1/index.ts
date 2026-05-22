@@ -117,7 +117,259 @@ export const createServer = (): void => {
     });
 
     app.get("/",(req,res) => {
-        res.send(`<h1 style="color: green;">Server Running</h1>`)
+        res.type("html").send(`
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mrauxins API Server</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f5f7fb;
+            --panel: #ffffff;
+            --text: #172033;
+            --muted: #637083;
+            --line: #dce3ee;
+            --accent: #0f766e;
+            --accent-soft: #dff7f3;
+            --shadow: 0 18px 45px rgba(22, 32, 51, 0.10);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 34rem),
+                linear-gradient(135deg, #f8fafc 0%, var(--bg) 100%);
+            color: var(--text);
+            display: grid;
+            place-items: center;
+            padding: 32px 16px;
+        }
+
+        main {
+            width: min(920px, 100%);
+        }
+
+        .shell {
+            background: rgba(255, 255, 255, 0.88);
+            border: 1px solid rgba(220, 227, 238, 0.9);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            overflow: hidden;
+        }
+
+        .hero {
+            display: grid;
+            gap: 28px;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            padding: 42px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            width: fit-content;
+            color: var(--accent);
+            background: var(--accent-soft);
+            border: 1px solid rgba(15, 118, 110, 0.18);
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0.16);
+        }
+
+        h1 {
+            margin: 18px 0 10px;
+            font-size: clamp(32px, 5vw, 54px);
+            line-height: 1.02;
+            letter-spacing: 0;
+        }
+
+        p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 17px;
+            line-height: 1.65;
+            max-width: 620px;
+        }
+
+        .badge {
+            min-width: 172px;
+            min-height: 172px;
+            display: grid;
+            place-items: center;
+            border-radius: 28px;
+            background: #172033;
+            color: #ffffff;
+            text-align: center;
+            padding: 24px;
+        }
+
+        .badge strong {
+            display: block;
+            font-size: 44px;
+            line-height: 1;
+        }
+
+        .badge span {
+            display: block;
+            margin-top: 10px;
+            color: #c7d2de;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 1px;
+            background: var(--line);
+        }
+
+        .item {
+            background: var(--panel);
+            padding: 26px;
+        }
+
+        .label {
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .value {
+            margin-top: 10px;
+            color: var(--text);
+            font-size: 18px;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 26px;
+            background: var(--panel);
+            border-top: 1px solid var(--line);
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 44px;
+            border-radius: 10px;
+            padding: 0 16px;
+            text-decoration: none;
+            font-weight: 800;
+            border: 1px solid var(--line);
+            background: #ffffff;
+        }
+
+        .button.primary {
+            color: #ffffff;
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        @media (max-width: 720px) {
+            body {
+                place-items: start center;
+            }
+
+            .hero {
+                grid-template-columns: 1fr;
+                padding: 30px 22px;
+            }
+
+            .badge {
+                width: 100%;
+                min-height: 120px;
+                border-radius: 18px;
+            }
+
+            .content {
+                grid-template-columns: 1fr;
+            }
+
+            .actions {
+                padding: 22px;
+            }
+
+            .button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <section class="shell" aria-label="API server status">
+            <div class="hero">
+                <div>
+                    <div class="status"><span class="dot" aria-hidden="true"></span> Server running</div>
+                    <h1>Mrauxins API Server</h1>
+                    <p>The backend is online and ready to handle mobile app requests, socket connections, media, and API documentation.</p>
+                </div>
+                <div class="badge" aria-label="HTTP 200 OK">
+                    <strong>200</strong>
+                    <span>Healthy</span>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="item">
+                    <div class="label">Environment</div>
+                    <div class="value">${env.NODE_ENV || "local"}</div>
+                </div>
+                <div class="item">
+                    <div class="label">Base URL</div>
+                    <div class="value">${req.protocol}://${req.get("host")}</div>
+                </div>
+                <div class="item">
+                    <div class="label">API Prefix</div>
+                    <div class="value">/api</div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <a class="button primary" href="/api-docs">Open API Docs</a>
+                <a class="button" href="/media">Browse Media</a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
+        `)
     })
     app.get("/.well-known/assetlinks.json",(req, res,next) => {
         const filePath = path.resolve(process.cwd(), ".well-known", "assetlinks.json");
