@@ -1,0 +1,27 @@
+{
+    "compilerOptions": {
+        "lib": [
+            "ES6"
+        ],
+        "target": "ES6",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "outDir": "./build",
+        "sourceMap": true,
+        "allowSyntheticDefaultImports": true,
+        "incremental": true,
+        "strict": true,
+        "esModuleInterop": true,
+        "noUnusedLocals": false,
+        "noUnusedParameters": false,
+        "noImplicitReturns": false,
+        "resolveJsonModule": true,
+        "noFallthroughCasesInSwitch": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "emitDecoratorMetadata": true,
+        "experimentalDecorators": true
+    },
+//    "include": ["src/**/*.ts", "types.d.ts"],
+    "exclude": ["node_modules"]
+}

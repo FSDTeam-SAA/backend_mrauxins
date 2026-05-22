@@ -1,0 +1,24 @@
+[
+    {
+      "relation": [
+        "delegate_permission/common.handle_all_urls"
+      ],
+      "target": {
+        "namespace": "web",
+        "site": "http://18.130.137.253/"
+      }
+    },
+    {
+      "relation": [
+        "delegate_permission/common.handle_all_urls"
+      ],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "two_one_two_messenger",
+        "sha256_cert_fingerprints": [
+          "a1:fa:54:21:f7:98:39:04:a4:aa:b1:e8:bc:cb:96:fc:79:f1:57:ae",
+          "e0:97:ad:93:67:6b:c7:6d:6b:9c:4e:36:4b:20:d8:9a:bb:fb:ba:d3:11:1b:05:f7:77:f8:a4:63:7b:e4:25:89"
+        ]
+      }
+    }
+  ]

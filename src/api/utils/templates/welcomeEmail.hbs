@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Welcome Email</title>
+    <style rel="stylesheet">
+        @media (min-width: 640px) {
+            .sm\:h-8 {
+                height: 2rem
+            }
+        }
+    </style>
+</head>
+<body style="margin: 0; line-height: inherit; font-family: sans-serif;">
+<div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center">
+    <section
+            style="margin-right: auto; margin-left: auto; width: 100%; max-width: 64rem; border-radius: 0.25rem; background: #111827;  padding: 2rem 1.5rem;">
+        <header style=" display: flex; width: 100%; align-items: center; justify-content: center;">
+            <a href="{{ APP_URL }}"
+               style="text-decoration: inherit; display: flex; width: auto; align-items: center; color: #FFFFFF;">
+                <span style=" display: block; vertical-align: middle; max-width: 100%; font-size: 2rem; font-family: Figtree, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji">
+                    Price<span style="font-size: larger; font-weight: 500;">Faster</span>
+                </span>
+            </a>
+        </header>
+
+        <main style="margin-top: 2rem; width: 100%; display: flex; flex-direction: column; gap: 1rem; justify-content: space-between; align-items: start;">
+
+            <h2 style="font-size: inherit; font-weight: inherit; color: #E5E7EB; ">
+                Hii {{ user_name }},
+            </h2>
+
+            <div style="line-height: 2; color: #D1D5DB; ">
+                Welcome to <span style="font-weight: 500; color: #A7F3D0">{{ APP_NAME }}</span>! We’re thrilled to have
+                you on board.
+            </div>
+
+            <div style="display: flex; width: 100%; align-items: center; justify-content: start; color: #D1D5DB;">
+                Your account Has Been Activated Successfully. We have also activated {{ package_name }} for you to use
+                the service. You can upgrade to a More advanced Package account or cancel any time.
+            </div>
+
+            <div style="display: flex; width: 100%; align-items: center; justify-content: start; color: #9CA3AF;">
+                Please complete your profile to ensure uninterrupted & smooth Service. And to access your properties from anywhere.
+            </div>
+
+            <div style="display: flex; width: 100%; margin-top: 1rem; align-items: center; justify-content: center; color: #9CA3AF;">
+                <a href="{{ PROFILE_URL }}"
+                   style="color: #FFFFFF; text-decoration: inherit; display: flex; margin-left: auto; margin-right: auto; align-items: center; border-radius: 0.5rem; background: #3B82F6; padding: 0.5rem 1.5rem; font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; text-transform: capitalize; letter-spacing: 0.05em;">
+                    Complete Profile
+                </a>
+            </div>
+
+            <p style="color: #D1D5DB; ">
+                Thanks,<br/>
+                Price Faster Team
+            </p>
+        </main>
+
+        <footer style="margin-top: 2rem;">
+            <p style="margin: 0; color: #9CA3AF;">
+                This email was sent to <span style="color: #efb693; text-decoration: inherit; cursor: pointer;">{{ email }}</span>
+                in accordance to onboarding successfully on our platform. If it's not you then contact to Support &
+                Customer Care Team on
+                <a href="mailto:{{ email }}"
+                   style="color: #949ed9; font-weight: 500; text-decoration: inherit; cursor: pointer;">{{ email }}</a>
+            </p>
+
+            <p style="margin: 0.75rem 0 0; color: #9CA3AF;">
+                ©{{ current_year }} Price Faster. All Rights Reserved.
+            </p>
+        </footer>
+    </section>
+</div>
+</body>
+</html>

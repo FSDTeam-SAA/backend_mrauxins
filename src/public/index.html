@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat App</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .chat-box { max-width: 600px; margin: auto; }
+    .messages { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; }
+    .input-box { margin-top: 10px; display: flex; gap: 10px; }
+    .input-box input { flex: 1; padding: 10px; }
+    .input-box button { padding: 10px; }
+    .user-box, .chat-setup { margin-bottom: 20px; }
+
+    #messages {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      height: 400px;
+      overflow-y: scroll;
+      background-color: #f9f9f9;
+    }
+
+    .message {
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+      max-width: 70%;
+    }
+
+    .message.sent {
+      align-self: flex-end;
+      background-color: #d1f7c4;
+      text-align: right;
+      border-radius: 10px 10px 0 10px;
+      padding: 8px 12px;
+    }
+
+    .message.received {
+      align-self: flex-start;
+      background-color: #f1f0f0;
+      text-align: left;
+      border-radius: 10px 10px 10px 0;
+      padding: 8px 12px;
+    }
+
+    .message-content {
+      word-wrap: break-word;
+    }
+
+  .message:nth-child(odd) {
+    background-color: #e6f7ff;
+  }
+
+  .message:nth-child(even) {
+    background-color: #fff;
+  }
+
+  .timestamp {
+    font-size: 0.8em;
+    color: #999;
+    margin-top: 5px;
+  }
+
+    @media (max-width: 768px) {
+    #chat-container {
+      max-width: 100%;
+      height: 300px;
+    }
+
+    .message {
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- <div class="chat-box">
+    <h2>Chat Application</h2>
+    <div class="messages" id="messages"></div>
+    <div class="input-box">
+      <input type="text" id="receiver" placeholder="Receiver ID" />
+      <input type="text" id="message" placeholder="Enter your message" />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+
+    const userId = prompt('Enter your user ID:');
+    socket.emit('login', userId);
+
+    const messagesDiv = document.getElementById('messages');
+
+    socket.on('receive_message', (message) => {
+      const msgDiv = document.createElement('div');
+      msgDiv.textContent = `[${message.sender}]: ${message.message}`;
+      messagesDiv.appendChild(msgDiv);
+    });
+
+    function sendMessage() {
+      const receiver = document.getElementById('receiver').value;
+      const message = document.getElementById('message').value;
+
+      socket.emit('send_message', { sender: userId, receiver, message });
+
+      const msgDiv = document.createElement('div');
+      msgDiv.textContent = `[You]: ${message}`;
+      messagesDiv.appendChild(msgDiv);
+      document.getElementById('message').value = '';
+    }
+  </script> -->
+
+  <!-- This is Working Code -->
+  <div class="chat-box">
+    <h2>Chat Application</h2>
+    <div class="messages" id="messages"></div>
+    <div class="input-box">
+      <input type="text" id="receiver" placeholder="Receiver ID">
+      <input type="text" id="chatId" placeholder="Chat ID">
+      <input type="text" id="message" placeholder="Enter your message">
+      <button onclick="sendMessage()">Send</button>
+      <button onclick="fetchChatMessages()">FetchAll</button>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    const userId = prompt("Enter your user id");
+    socket.emit('login', userId);
+    let chatId = '67499180ed9be34688636516';
+
+    const messagesDiv = document.getElementById('messages');
+
+    socket.on('receive_message', (message) => {
+      const msgDiv = document.createElement('div');
+      // msgDiv.textContent = `[${message.senderInfo.firstName}]: ${message.message}`;
+      msgDiv.className = 'message';
+        msgDiv.innerHTML = `
+          <strong>[Receiver]:</strong> ${message.message}
+          <span class="timestamp">${new Date().toLocaleString()}</span>
+        `;
+      messagesDiv.appendChild(msgDiv)
+    })
+
+    socket.on('new_message', (message) => {
+      console.log("new_message.........",message)
+      const msgDiv = document.createElement('div');
+      // msgDiv.textContent = `[${message.senderInfo.firstName}]: ${message.content}`;
+      msgDiv.className = 'message';
+        msgDiv.innerHTML = `
+          <strong>[Receiver]:</strong> ${message.content}
+          <span class="timestamp">${new Date().toLocaleString()}</span>
+        `;
+      messagesDiv.appendChild(msgDiv)
+    });
+
+    async function sendMessage(){
+      console.log("Send button Call")
+      const receiver = document.getElementById("receiver").value;
+      const message = document.getElementById("message").value;
+
+
+      socket.emit("send_message", {sender: userId, receiver, message});
+      const msgDiv = document.createElement('div');
+      // msgDiv.textContent = `[You]: ${message}`;
+      msgDiv.className = 'message';
+        msgDiv.innerHTML = `
+          <strong>[Sender]: </strong>${message}
+          <span class="timestamp">${new Date().toLocaleString()}</span>
+        `;
+      messagesDiv.appendChild(msgDiv);
+      document.getElementById('message').value = '';
+      // await fetchChatMessages()
+    }
+
+    async function fetchChatMessages(){
+      try {
+        const response = await axios.get(`http://localhost:3001/api/v1/chat/messages/${chatId}`);
+        console.log("res....",response)
+   
+
+        if(response.status === 200){
+          console.log("Messages:",response.data)
+          renderMessages(response.data)
+        }else{
+          console.error('Failed to fetch message:')
+        }
+      } catch (error) {
+        console.error('Error fetching chat messages:', error)
+      }
+    }
+
+    function renderMessages(messages){
+      const messagesDiv = document.getElementById('messages');
+      messagesDiv.innerHTML = "";
+
+      messages.forEach((msg) => {
+        console.log("msg.................",msg)
+        const isSender = msg._id == userId;
+
+        console.log("msg........",msg)
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${isSender ? 'sent' : 'received'}`;
+        msgDiv.innerHTML = `
+          <strong>${msg.sender.firstName}:</strong> ${msg.content}
+          <span class="timestamp">${new Date(msg.createdAt).toLocaleString()}</span>
+        `;
+
+        // Add the message to the chat container
+        messagesDiv.appendChild(msgDiv)
+      });
+
+      // Scroll to the bottom of the chat container
+      messagesDiv.scrollTop = messagesDiv.scrollHeight
+    }
+
+    fetchChatMessages();
+  </script>
+
+
+  
+
+
+<!--
+<script>
+  const socket = io();
+  let currentChatId = null;
+  let userId = null;
+  let receiver = null;
+
+socket.on('receive_message', (message) => {
+  
+  console.log("receive_message............",message)
+  const messagesDiv = document.getElementById('messages');
+  const msgDiv = document.createElement('div');
+  msgDiv.textContent = `[${message.senderId}]: ${message.content}`;
+  messagesDiv.appendChild(msgDiv)
+})
+
+// Login function
+function login(){
+  userId = document.getElementById('userId').value;
+  if(!userId){
+    alert("Please enter your UserId")
+  }
+  socket.emit('login',userId);  // Notify the backend about the login
+  document.querySelector('.user-box').style.display = 'none';
+  document.querySelector('.chat-setup').style.display = 'block';
+}
+
+
+// Start a new chat
+async function startChat(){
+  const receiverId = document.getElementById('receiverId').value;
+  receiver = receiverId
+  if(!receiverId){
+    alert('Please enter a Receiver ID.')
+    return
+  }
+  try {
+    console.log("This...",userId, receiverId)
+    // API call to create or fetch a chat
+    const response = await axios.post('http://localhost:3001/api/v1/chat', {
+        senderId: userId, // Replace with actual userId
+        receiverId: receiverId // Replace with actual receiverId
+    });
+    console.log('Response:', response.data);
+    currentChatId = response.data._id;
+
+    // Join the chat room
+    socket.emit("join_chat", currentChatId);
+    document.querySelector('.chat-setup').style.display = 'none';
+    document.querySelector('.input-box').style.display = 'flex';
+
+     // Fetch and display chat messages
+     fetchMessages();
+  } catch (error) {
+    console.log("Error Starting chat: ",error);
+    alert('Could not start chat. Please try again');
+  }
+}
+
+// Fetch messages for the current chat
+async function fetchMessages(){
+  try {
+    const response = await axios.get(`http://localhost:3001/api/v1/chat/messages/${currentChatId}`);
+    const messagesDiv = document.getElementById('messages');
+    messagesDiv.innerHTML = ""; // Clear previous messages
+    response.data.forEach((message) => {
+      const msgDiv = document.createElement('div');
+      msgDiv.textContent = `[${message.sender}]: ${message.content}`;
+      messagesDiv.appendChild(msgDiv)      
+    });
+  } catch (error) {
+    console.log('Error fetching messages: ',error)
+  }
+}
+
+async function sendMessage(){
+  const content = document.getElementById('message').value;
+  if(!content){
+    alert('Please enter a message');
+    return
+  }
+console.log("receiverId sent........",receiver)
+  try {
+     // API call to send a message
+     const response = await axios.post('http://localhost:3001/api/v1/chat/send-message',{
+      chatId: currentChatId,
+      senderId: userId,
+      content,
+      media:null,
+      receiver
+     });
+
+     const sentMessage = response.data;
+
+     // Emit the message_sent event to the server for acknowledgment
+    //  socket.emit('message_sent', {
+    //   chatId: currentChatId,
+    //   sender:userId,
+    //   content: response
+    //  });
+     
+     // Add the sent message to the chat
+     const messagesDiv = document.getElementById('messages');
+     const msgDiv = document.createElement('div');
+     msgDiv.textContent = `[You]: ${content}`;
+     messagesDiv.appendChild(msgDiv);
+
+     document.getElementById('message').value = '';   // clear the input field
+  } catch (error) {
+    console.log('Error sending message: ',error)
+  }
+}
+
+
+</script>
+-->
+
+</body>
+</html>

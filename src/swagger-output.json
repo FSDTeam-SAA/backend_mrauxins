@@ -1,0 +1,4364 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "212messenger App API Doc",
+    "description": "API Documentation for 212messenger App",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api"
+  },
+  {
+      "url": "http://18.130.137.253//api"
+  }
+  ],
+  "paths": {
+    "/v1/auth/send-otp": {
+  "post": {
+    "tags": ["Authentication"],
+    "summary": "Send OTP API",
+    "description": "API to send an OTP to the provided email address.",
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "example": "vishvadattfreshcode@gmail.com",
+                "description": "Email address to which the OTP will be sent."
+              }
+            },
+            "required": ["email"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "OTP sent successfully",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Otp Sent Successfully",
+                  "description": "Response message indicating the result of the request."
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid input or missing parameters."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+    "/v1/auth/verify-otp": {
+  "post": {
+    "tags": ["Authentication"],
+    "summary": "Verify OTP API",
+    "description": "API to verify the OTP sent to the user's email or phone.",
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "example": "vishvadattfreshcode@gmail.com",
+                "description": "Email address of the user."
+              },
+              "otp": {
+                "type": "string",
+                "example": "123456",
+                "description": "OTP received by the user."
+              },
+              "fcmToken": {
+                "type": "string",
+                "example": "vxvfsdhfowhrowrowhrlsdvxfd",
+                "description": "FCM token for push notifications."
+              },
+              "deviceType": {
+                "type": "string",
+                "example": "ios",
+                "description": "Type of device used by the user (e.g., ios, android)."
+              },
+              "phone": {
+                "type": "string",
+                "example": "any",
+                "description": "Phone number of the user (optional)."
+              },
+              "provider": {
+                "type": "string",
+                "example": "any",
+                "description": "Authentication provider name (e.g., Google, Facebook)."
+              },
+              "providerId": {
+                "type": "string",
+                "example": "any",
+                "description": "ID provided by the authentication provider."
+              }
+            },
+            "required": ["email", "otp", "fcmToken", "deviceType"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "OTP verified successfully",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Verify Successfully.",
+                  "description": "Response message indicating the result of the request."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                      "description": "JWT token for authenticated user."
+                    },
+                    "user": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "example": "675aa7ff6fea1c0bd1881f07",
+                          "description": "Unique ID of the user."
+                        },
+                        "email": {
+                          "type": "string",
+                          "example": "vishvadattfreshcode@gmail.com",
+                          "description": "Email address of the user."
+                        },
+                        "userName": {
+                          "type": "string",
+                          "example": "vishu12",
+                          "description": "Username of the user."
+                        },
+                        "isVerified": {
+                          "type": "boolean",
+                          "example": true,
+                          "description": "Indicates if the user's email is verified."
+                        },
+                        "providerId": {
+                          "type": "string",
+                          "example": null,
+                          "description": "ID of the authentication provider."
+                        },
+                        "providerName": {
+                          "type": "string",
+                          "example": "manually",
+                          "description": "Name of the authentication provider."
+                        },
+                        "isOnline": {
+                          "type": "boolean",
+                          "example": false,
+                          "description": "Indicates if the user is currently online."
+                        },
+                        "lastSeen": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-12-12T09:08:15.808Z",
+                          "description": "Timestamp of the user's last online activity."
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-12-12T09:08:15.808Z",
+                          "description": "Timestamp of user account creation."
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-12-12T09:08:15.808Z",
+                          "description": "Timestamp of last user account update."
+                        },
+                        "__v": {
+                          "type": "integer",
+                          "example": 1,
+                          "description": "Version key for the user document."
+                        },
+                        "otp": {
+                          "type": "string",
+                          "example": null,
+                          "description": "The OTP value (cleared after verification)."
+                        },
+                        "otpExpiry": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-12-30T05:53:59.173Z",
+                          "description": "Timestamp when the OTP expires."
+                        },
+                        "profilePicture": {
+                          "type": "string",
+                          "example": "images-Screenshot 2024-06-07 131757.png",
+                          "description": "URL of the user's profile picture."
+                        },
+                        "clearedChats": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "example": [],
+                          "description": "List of chat IDs cleared by the user."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid input or missing parameters."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+    "/v1/users/{userId}": {
+  "put": {
+    "tags": ["Users"],
+    "summary": "Update User Profile",
+    "description": "API to update a user's profile, including uploading files and updating other profile details.",
+    "parameters": [
+      {
+        "name": "userId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Unique ID of the user whose profile needs to be updated."
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Bearer token for authentication."
+      }
+    ],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "multipart/form-data": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "userName": {
+                "type": "string",
+                "example": "vishu12",
+                "description": "Updated username of the user."
+              },
+              "profilePicture": {
+                "type": "string",
+                "format": "binary",
+                "description": "File upload for the user's profile picture."
+              },
+              "additionalFile": {
+                "type": "string",
+                "format": "binary",
+                "description": "Optional additional file for user profile."
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Profile updated successfully",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Update Successfully.",
+                  "description": "Response message indicating the result of the request."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "675aa7ff6fea1c0bd1881f07",
+                      "description": "Unique ID of the user."
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "vishvadattfreshcode@gmail.com",
+                      "description": "Email address of the user."
+                    },
+                    "userName": {
+                      "type": "string",
+                      "example": "vishu12",
+                      "description": "Updated username of the user."
+                    },
+                    "isVerified": {
+                      "type": "boolean",
+                      "example": true,
+                      "description": "Indicates if the user's email is verified."
+                    },
+                    "providerId": {
+                      "type": "string",
+                      "example": null,
+                      "description": "ID of the authentication provider."
+                    },
+                    "providerName": {
+                      "type": "string",
+                      "example": "manually",
+                      "description": "Name of the authentication provider."
+                    },
+                    "isOnline": {
+                      "type": "boolean",
+                      "example": false,
+                      "description": "Indicates if the user is currently online."
+                    },
+                    "lastSeen": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-12T09:08:15.808Z",
+                      "description": "Timestamp of the user's last online activity."
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-12T09:08:15.808Z",
+                      "description": "Timestamp of user account creation."
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-12T09:08:15.808Z",
+                      "description": "Timestamp of last user account update."
+                    },
+                    "__v": {
+                      "type": "integer",
+                      "example": 1,
+                      "description": "Version key for the user document."
+                    },
+                    "otp": {
+                      "type": "string",
+                      "example": null,
+                      "description": "The OTP value (cleared after verification)."
+                    },
+                    "otpExpiry": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-30T05:53:59.173Z",
+                      "description": "Timestamp when the OTP expires."
+                    },
+                    "profilePicture": {
+                      "type": "string",
+                      "example": "images-Screenshot 2024-06-07 131757.png",
+                      "description": "URL of the user's updated profile picture."
+                    },
+                    "clearedChats": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [],
+                      "description": "List of chat IDs cleared by the user."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid input or missing parameters."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to perform this action."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+    "/v1/users": {
+  "get": {
+    "tags": ["Users"],
+    "summary": "Get All Users",
+    "description": "Retrieve a paginated list of users. Supports filtering by username.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Bearer token for authentication."
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "example": 1
+        },
+        "description": "Page number for pagination."
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "example": 10
+        },
+        "description": "Number of users per page for pagination."
+      },
+      {
+        "name": "username",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "example": "dani1234"
+        },
+        "description": "Filter users by username."
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Users retrieved successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Get All Users.",
+                  "description": "Response message indicating the result of the request."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "users": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "675aaa0a1c1ec3a1f9a8ea01",
+                            "description": "Unique ID of the user."
+                          },
+                          "phone": {
+                            "type": "string",
+                            "example": "9723966918",
+                            "description": "Phone number of the user."
+                          },
+                          "email": {
+                            "type": "string",
+                            "example": "user2@gmail.com",
+                            "description": "Email address of the user."
+                          },
+                          "userName": {
+                            "type": "string",
+                            "example": "dani1234",
+                            "description": "Username of the user."
+                          },
+                          "isVerified": {
+                            "type": "boolean",
+                            "example": true,
+                            "description": "Indicates if the user's email or phone is verified."
+                          },
+                          "providerId": {
+                            "type": "string",
+                            "example": "123456789abcd",
+                            "description": "ID of the authentication provider."
+                          },
+                          "providerName": {
+                            "type": "string",
+                            "example": "google",
+                            "description": "Name of the authentication provider."
+                          },
+                          "isOnline": {
+                            "type": "boolean",
+                            "example": false,
+                            "description": "Indicates if the user is currently online."
+                          },
+                          "lastSeen": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2024-12-12T09:16:58.656Z",
+                            "description": "Timestamp of the user's last online activity."
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2024-12-12T09:16:58.656Z",
+                            "description": "Timestamp of user account creation."
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2024-12-12T09:16:58.656Z",
+                            "description": "Timestamp of last user account update."
+                          },
+                          "profilePicture": {
+                            "type": "string",
+                            "example": "/uploads/1734088117864-Scenario4.png",
+                            "description": "URL of the user's profile picture."
+                          }
+                        }
+                      },
+                      "description": "List of user objects."
+                    },
+                    "totalPages": {
+                      "type": "integer",
+                      "example": 2,
+                      "description": "Total number of pages available."
+                    },
+                    "currentPage": {
+                      "type": "integer",
+                      "example": 1,
+                      "description": "Current page number."
+                    },
+                    "totalUsers": {
+                      "type": "integer",
+                      "example": 4,
+                      "description": "Total number of users available."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to perform this action."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+    "/v1/chat/create-chat": {
+  "post": {
+    "tags": ["Chat"],
+    "summary": "Create New Chat",
+    "description": "Creates a new one-to-one chat with another user.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Bearer token for authentication."
+      }
+    ],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "userId2": {
+                "type": "string",
+                "example": "67601dfa6307547d19944818",
+                "description": "The ID of the user to initiate the chat with."
+              }
+            },
+            "required": ["userId2"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Chat created successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "New chat created.",
+                  "description": "Response message indicating the result of the request."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "6763ec2315fdf3b3cdf3de56",
+                      "description": "Unique ID of the newly created chat."
+                    },
+                    "isGroup": {
+                      "type": "boolean",
+                      "example": false,
+                      "description": "Indicates if the chat is a group chat."
+                    },
+                    "participants": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "675aa7ff6fea1c0bd1881f07",
+                        "67601dfa6307547d19944818"
+                      ],
+                      "description": "List of user IDs participating in the chat."
+                    },
+                    "admins": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [],
+                      "description": "List of admin IDs in the chat. Empty for one-to-one chats."
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-19T09:49:23.755Z",
+                      "description": "Timestamp when the chat was created."
+                    },
+                    "__v": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "Version key maintained by Mongoose."
+                    },
+                    "lastMessage": {
+                      "type": "string",
+                      "example": "6763ef0a8c568c9605454aa0",
+                      "description": "ID of the last message in the chat."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to perform this action."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+    "/v1/chat/sent-message": {
+  "post": {
+    "tags": ["Chat"],
+    "summary": "Send a New Message",
+    "description": "Sends a new message in an existing one-to-one chat.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Bearer token for authentication."
+      }
+    ],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "chatId": {
+                "type": "string",
+                "example": "6763ec2315fdf3b3cdf3de56",
+                "description": "The ID of the chat where the message will be sent."
+              },
+              "content": {
+                "type": "string",
+                "example": "Hello, how are you",
+                "description": "The message content."
+              },
+              "type": {
+                "type": "string",
+                "example": "text",
+                "description": "Type of the message, e.g., 'text', 'image', 'video', etc."
+              },
+              "fileUrls": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [],
+                "description": "Array of file URLs if the message contains media files."
+              }
+            },
+            "required": ["chatId", "content", "type"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Message sent successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Message sent successfully.",
+                  "description": "Response message indicating the result of the request."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "chatId": {
+                      "type": "string",
+                      "example": "6763ec2315fdf3b3cdf3de56",
+                      "description": "The ID of the chat where the message was sent."
+                    },
+                    "sender": {
+                      "type": "string",
+                      "example": "675aa7ff6fea1c0bd1881f07",
+                      "description": "The ID of the user who sent the message."
+                    },
+                    "content": {
+                      "type": "string",
+                      "example": "Hello, how are you",
+                      "description": "The message content."
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "text",
+                      "description": "Type of the message."
+                    },
+                    "fileIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [],
+                      "description": "Array of file IDs associated with the message."
+                    },
+                    "isDeleted": {
+                      "type": "boolean",
+                      "example": false,
+                      "description": "Indicates whether the message has been deleted."
+                    },
+                    "deletedFor": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [],
+                      "description": "Array of user IDs for whom the message has been deleted."
+                    },
+                    "isRead": {
+                      "type": "boolean",
+                      "example": false,
+                      "description": "Indicates whether the message has been read."
+                    },
+                    "_id": {
+                      "type": "string",
+                      "example": "677237bfe776d5678e0632a0",
+                      "description": "Unique ID of the message."
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-30T06:03:43.936Z",
+                      "description": "Timestamp when the message was created."
+                    },
+                    "__v": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "Version key maintained by Mongoose."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid input data."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to perform this action."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+    "/v1/chat/{chatId}": {
+  "get": {
+    "tags": ["Chat"],
+    "summary": "Retrieve Chat Messages",
+    "description": "Fetches all messages for a specific chat identified by its ID.",
+    "parameters": [
+      {
+        "name": "chatId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "The ID of the chat for which messages are to be retrieved."
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Bearer token for authentication."
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Messages fetched successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Messages fetched successfully.",
+                  "description": "Response message indicating the result of the request."
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "_id": {
+                        "type": "string",
+                        "example": "677237bfe776d5678e0632a0",
+                        "description": "Unique ID of the message."
+                      },
+                      "chatId": {
+                        "type": "string",
+                        "example": "6763ec2315fdf3b3cdf3de56",
+                        "description": "The ID of the chat the message belongs to."
+                      },
+                      "sender": {
+                        "type": "string",
+                        "example": "675aa7ff6fea1c0bd1881f07",
+                        "description": "The ID of the user who sent the message."
+                      },
+                      "content": {
+                        "type": "string",
+                        "example": "Hello, how are you",
+                        "description": "The content of the message."
+                      },
+                      "type": {
+                        "type": "string",
+                        "example": "text",
+                        "description": "The type of the message, e.g., 'text', 'image', 'video'."
+                      },
+                      "fileIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "example": [],
+                        "description": "Array of file IDs associated with the message."
+                      },
+                      "isDeleted": {
+                        "type": "boolean",
+                        "example": false,
+                        "description": "Indicates whether the message has been deleted."
+                      },
+                      "deletedFor": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "example": [],
+                        "description": "Array of user IDs for whom the message has been deleted."
+                      },
+                      "isRead": {
+                        "type": "boolean",
+                        "example": false,
+                        "description": "Indicates whether the message has been read."
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-12-30T06:03:43.936Z",
+                        "description": "Timestamp when the message was created."
+                      },
+                      "__v": {
+                        "type": "integer",
+                        "example": 0,
+                        "description": "Version key maintained by Mongoose."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid input data."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to access this chat."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+    "/v1/chat/upload-media": {
+      "post": {
+        "tags": ["Upload"],
+        "description": "Upload media on server.",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/v1/chat/conversations/list": {
+    "get": {
+      "tags": ["Chat"],
+      "summary": "Fetch Conversations List",
+      "description": "Retrieve a list of conversations, including group and one-to-one chats, along with their latest messages.",
+      "parameters": [
+        {
+          "name": "authorization",
+          "in": "header",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Bearer token for authentication."
+        }
+      ],
+      "responses": {
+        "200": {
+          "description": "Conversation list fetched successfully.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "integer",
+                    "example": 1,
+                    "description": "Status of the request. 1 indicates success."
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "Conversation list fetched successfully.",
+                    "description": "Response message indicating the result of the request."
+                  },
+                  "data": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "example": "6763fafd936214eaa20b329e",
+                          "description": "Unique ID of the conversation."
+                        },
+                        "isGroup": {
+                          "type": "boolean",
+                          "example": true,
+                          "description": "Indicates whether the conversation is a group chat."
+                        },
+                        "groupName": {
+                          "type": "string",
+                          "example": "PUBG Group",
+                          "description": "Name of the group (present only if `isGroup` is true)."
+                        },
+                        "groupImage": {
+                          "type": "string",
+                          "example": "images-Screenshot 2024-05-28 114740.png",
+                          "description": "Image of the group (present only if `isGroup` is true)."
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-12-19T10:52:45.490Z",
+                          "description": "Timestamp when the conversation was created."
+                        },
+                        "lastMessage": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "6764009b6007c5ce4f33b542",
+                              "description": "ID of the last message in the conversation."
+                            },
+                            "content": {
+                              "type": "string",
+                              "example": "1st message",
+                              "description": "Content of the last message."
+                            },
+                            "sender": {
+                              "type": "string",
+                              "example": "675aa7ff6fea1c0bd1881f07",
+                              "description": "ID of the user who sent the last message."
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2024-12-19T11:16:43.292Z",
+                              "description": "Timestamp when the last message was sent."
+                            }
+                          }
+                        },
+                        "participantDetails": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "_id": {
+                                "type": "string",
+                                "example": "675aa7ff6fea1c0bd1881f07",
+                                "description": "ID of the participant."
+                              },
+                              "userName": {
+                                "type": "string",
+                                "example": "vishu12",
+                                "description": "Username of the participant."
+                              },
+                              "profilePicture": {
+                                "type": "string",
+                                "example": "images-Screenshot 2024-06-07 131757.png",
+                                "description": "Profile picture URL of the participant."
+                              }
+                            }
+                          },
+                          "description": "Details of the participants in the conversation."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Bad Request - Invalid input data."
+        },
+        "401": {
+          "description": "Unauthorized - Authentication required."
+        },
+        "403": {
+          "description": "Forbidden - User does not have permission to view the conversations."
+        },
+        "500": {
+          "description": "Internal Server Error - An error occurred on the server."
+        }
+      }
+    }
+},
+    "/v1/chat/delete-message": {
+    "delete": {
+    "tags": ["Chat"],
+    "summary": "Delete a Message from Chat",
+    "description": "Deletes a message from the specified chat, identified by its `messageId`.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Bearer token for authentication."
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Message deleted successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Message deleted successfully.",
+                  "description": "Response message indicating the result of the request."
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid input data."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to delete the message."
+      },
+      "404": {
+        "description": "Not Found - Message with the specified ID not found."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    },
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "messageId": {
+                "type": "string",
+                "example": "677237bfe776d5678e0632a0",
+                "description": "The ID of the message to be deleted."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+   "/v1/chat/clear-chat/{chatId}": {
+  "delete": {
+    "tags": ["Chat"],
+    "summary": "Clear All Messages of a Chat",
+    "description": "Clears all messages from the specified chat, identified by its `chatId`.",
+    "parameters": [
+      {
+        "name": "chatId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "The ID of the chat from which all messages will be cleared."
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Bearer token for authentication."
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Chat cleared successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Chat cleared successfully.",
+                  "description": "Response message indicating the result of the request."
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid input data."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to clear the chat."
+      },
+      "404": {
+        "description": "Not Found - Chat with the specified ID not found."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+    "/v1/group/create-group": {
+    "post": {
+      "tags": ["Group"],
+      "summary": "Create a New Group",
+      "description": "Creates a new group with the specified `groupName` and a list of participants. The creator of the group is automatically made an admin.",
+      "parameters": [
+        {
+          "name": "authorization",
+          "in": "header",
+          "schema": {
+            "type": "string"
+          },
+          "required": true,
+          "description": "Bearer token for authentication."
+        }
+      ],
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "groupName": {
+                  "type": "string",
+                  "example": "PUBG Group",
+                  "description": "The name of the new group."
+                },
+                "participants": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "example": [
+                    "675aa7ff6fea1c0bd1881f07",
+                    "675aaa0a1c1ec3a1f9a8ea01"
+                  ],
+                  "description": "List of participant IDs to be added to the group."
+                }
+              },
+              "required": ["groupName", "participants"]
+            }
+          }
+        }
+      },
+      "responses": {
+        "200": {
+          "description": "Group created successfully.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "integer",
+                    "example": 1,
+                    "description": "Status of the request. 1 indicates success."
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "Group created successfully.",
+                    "description": "Response message indicating the result of the request."
+                  },
+                  "data": {
+                    "type": "object",
+                    "properties": {
+                      "_id": {
+                        "type": "string",
+                        "example": "67723ece516f17b2c8bc9984",
+                        "description": "The unique ID of the newly created group."
+                      },
+                      "groupName": {
+                        "type": "string",
+                        "example": "Nodejs group",
+                        "description": "The name of the group."
+                      },
+                      "isGroup": {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "Indicates that this is a group."
+                      },
+                      "participants": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "example": [
+                          "675aa7ff6fea1c0bd1881f07"
+                        ],
+                        "description": "List of participant IDs in the group."
+                      },
+                      "admins": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "example": [
+                          "675aa7ff6fea1c0bd1881f07"
+                        ],
+                        "description": "List of admin IDs for the group."
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "example": "2024-12-30T06:33:50.465Z",
+                        "description": "Timestamp when the group was created."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Bad Request - Invalid input data."
+        },
+        "401": {
+          "description": "Unauthorized - Authentication required."
+        },
+        "403": {
+          "description": "Forbidden - User does not have permission to create the group."
+        },
+        "500": {
+          "description": "Internal Server Error - An error occurred on the server."
+        }
+      }
+    }
+},
+    "/v1/group/add-members": {
+  "post": {
+    "tags": ["Group"],
+    "summary": "Add New Members to Group",
+    "description": "Adds new members to an existing group. The `groupId` identifies the group, and `newMembers` contains an array of user IDs to be added to the group.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "schema": {
+          "type": "string"
+        },
+        "required": true,
+        "description": "Bearer token for authentication."
+      }
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "groupId": {
+                "type": "string",
+                "example": "6763fafd936214eaa20b329e",
+                "description": "The unique ID of the group to which members will be added."
+              },
+              "newMembers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "675aaa0a1c1ec3a1f9a8ea01"
+                ],
+                "description": "An array of user IDs to be added to the group."
+              }
+            },
+            "required": ["groupId", "newMembers"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Members added successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Members added successfully.",
+                  "description": "Response message indicating that the members were successfully added."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "groupId": {
+                      "type": "string",
+                      "example": "67723ece516f17b2c8bc9984",
+                      "description": "The unique ID of the updated group."
+                    },
+                    "updatedParticipants": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "675aa7ff6fea1c0bd1881f07",
+                        "675aaa0a1c1ec3a1f9a8ea01"
+                      ],
+                      "description": "The updated list of participant IDs in the group after adding new members."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid input data."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to add members to the group."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+   "/v1/group/sent-group-message": {
+  "post": {
+    "tags": ["Group"],
+    "summary": "Send a New Message to Group",
+    "description": "Sends a new message to the group identified by `chatId`. The `content` field holds the message body, and the `type` determines the type of message (text, image, file, etc.). If there are any files, they should be uploaded via `files` in form-data.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "schema": {
+          "type": "string"
+        },
+        "required": true,
+        "description": "Bearer token for authentication."
+      }
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "chatId": {
+                "type": "string",
+                "example": "6763fafd936214eaa20b329e",
+                "description": "The unique ID of the group chat where the message is to be sent."
+              },
+              "content": {
+                "type": "string",
+                "example": "1st message",
+                "description": "The content of the message being sent."
+              },
+              "type": {
+                "type": "string",
+                "example": "text",
+                "description": "The type of message. Example: `text`, `image`, `file`, etc."
+              },
+              "fileUrls": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["https://example.com/file1.jpg"],
+                "description": "An array of file URLs if there are files attached to the message."
+              }
+            },
+            "required": ["chatId", "content", "type"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Message sent successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Message sent successfully.",
+                  "description": "Response message indicating that the message was successfully sent."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "_id": {
+                      "type": "string",
+                      "example": "6763fafd936214eaa20b329e",
+                      "description": "The unique ID of the message."
+                    },
+                    "chatId": {
+                      "type": "string",
+                      "example": "6763fafd936214eaa20b329e",
+                      "description": "The ID of the group chat to which the message was sent."
+                    },
+                    "sender": {
+                      "type": "string",
+                      "example": "675aa7ff6fea1c0bd1881f07",
+                      "description": "The user ID of the sender of the message."
+                    },
+                    "content": {
+                      "type": "string",
+                      "example": "1st message",
+                      "description": "The content of the sent message."
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "text",
+                      "description": "The type of message (e.g., text, image, file)."
+                    },
+                    "fileUrls": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["https://example.com/file1.jpg"],
+                      "description": "An array of file URLs if there were any files attached to the message."
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "example": "2024-12-30T06:03:43.936Z",
+                      "description": "Timestamp of when the message was created."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid input data."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to send a message to this group."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+    "/v1/group/group-chat": {
+  "get": {
+    "tags": ["Group"],
+    "summary": "Fetch Group Chats",
+    "description": "Fetches a list of group conversations with details such as group name, participants, last message, and pagination.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "schema": {
+          "type": "string"
+        },
+        "required": true,
+        "description": "Bearer token for authentication."
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "example": "1",
+          "description": "The page number to fetch group chats from (for pagination)."
+        },
+        "required": true
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "example": "20",
+          "description": "The number of group chats to return per page."
+        },
+        "required": true
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Group chats fetched successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Group chats fetched successfully.",
+                  "description": "Response message indicating that the group chats were successfully fetched."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "chats": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "6761004ae53df23b7af3e07e",
+                            "description": "The unique ID of the group chat."
+                          },
+                          "isGroup": {
+                            "type": "boolean",
+                            "example": true,
+                            "description": "Indicates whether this is a group chat."
+                          },
+                          "groupName": {
+                            "type": "string",
+                            "example": "Demo Test Group",
+                            "description": "The name of the group."
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "example": "2024-12-17T04:38:34.806Z",
+                            "description": "Timestamp when the group was created."
+                          },
+                          "groupImage": {
+                            "type": "string",
+                            "example": "images-Screenshot 2024-05-28 114740.png",
+                            "description": "Image representing the group."
+                          },
+                          "participantsDetails": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "_id": {
+                                  "type": "string",
+                                  "example": "67601dfa6307547d19944818",
+                                  "description": "The ID of the participant."
+                                },
+                                "name": {
+                                  "type": "string",
+                                  "example": "user4",
+                                  "description": "Name of the participant."
+                                },
+                                "profileImage": {
+                                  "type": "string",
+                                  "example": "images-Screenshot 2024-06-07 131757.png",
+                                  "description": "Profile image of the participant (if available)."
+                                },
+                                "isAdmin": {
+                                  "type": "boolean",
+                                  "example": true,
+                                  "description": "Indicates if the participant is an admin."
+                                }
+                              }
+                            }
+                          },
+                          "lastMessageDetails": {
+                            "type": "object",
+                            "properties": {
+                              "sender": {
+                                "type": "string",
+                                "example": "67601dfa6307547d19944818",
+                                "description": "The ID of the sender of the last message."
+                              },
+                              "content": {
+                                "type": "string",
+                                "example": "This message from another group",
+                                "description": "The content of the last message."
+                              },
+                              "fileIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "example": ["images-Screenshot 2024-07-22 170002.png"],
+                                "description": "An array of file IDs attached to the last message (if any)."
+                              },
+                              "isRead": {
+                                "type": "boolean",
+                                "example": false,
+                                "description": "Indicates if the last message was read."
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "example": "2024-12-17T06:57:08.299Z",
+                                "description": "Timestamp when the last message was created."
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "pagination": {
+                      "type": "object",
+                      "properties": {
+                        "currentPage": {
+                          "type": "integer",
+                          "example": 1,
+                          "description": "The current page number."
+                        },
+                        "totalPages": {
+                          "type": "integer",
+                          "example": 1,
+                          "description": "Total number of pages."
+                        },
+                        "totalItems": {
+                          "type": "integer",
+                          "example": 3,
+                          "description": "Total number of group chats available."
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid parameters."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to access the group chats."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+   "/v1/group/assignAdminToGroup": {
+  "post": {
+    "tags": ["Group"],
+    "summary": "Assign Admin to Group",
+    "description": "Assign a user as an admin in the specified group.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "schema": {
+          "type": "string"
+        },
+        "required": true,
+        "description": "Bearer token for authentication."
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "User successfully assigned as admin.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "User successfully assigned as admin.",
+                  "description": "Message indicating the user was successfully assigned as an admin."
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid parameters."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to assign admin."
+      },
+      "409": {
+        "description": "Conflict - The user is already an admin.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "example": "USER_ALREADY_ADMIN",
+                  "description": "Error code indicating that the user is already an admin."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "User is already an admin",
+                  "description": "Message indicating that the user is already an admin."
+                }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    },
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "chatId": {
+                "type": "string",
+                "example": "6763fafd936214eaa20b329e",
+                "description": "The unique ID of the group chat."
+              },
+              "userId": {
+                "type": "string",
+                "example": "675aaa0a1c1ec3a1f9a8ea01",
+                "description": "The unique ID of the user to be assigned as an admin."
+              }
+            },
+            "required": ["chatId", "userId"]
+          }
+        }
+      }
+    }
+  }
+},
+  "/v1/group/leaveGroup/{chatId}": {
+  "delete": {
+    "tags": ["Group"],
+    "summary": "Leave Group",
+    "description": "Allows a user to leave a specified group.",
+    "parameters": [
+      {
+        "name": "chatId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "6763fafd936214eaa20b329e",
+          "description": "The unique ID of the group chat that the user wants to leave."
+        }
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Successfully left the group.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "You have left the group.",
+                  "description": "Message indicating that the user successfully left the group."
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to leave the group."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+    "/v1/group/remove-member": {
+  "post": {
+    "tags": ["Group"],
+    "summary": "Remove Member from Group",
+    "description": "Allows an admin to remove a member from a group.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "chatId": {
+                "type": "string",
+                "example": "6763fafd936214eaa20b329e",
+                "description": "The unique ID of the group chat from which the member will be removed."
+              },
+              "memberId": {
+                "type": "string",
+                "example": "675aaa0a1c1ec3a1f9a8ea01",
+                "description": "The unique ID of the member to be removed from the group."
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Member successfully removed from the group.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Member removed from the group",
+                  "description": "Message confirming the member was removed from the group."
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to remove a member (only admins can perform this action)."
+      },
+      "500": {
+        "description": "Internal Server Error - An error occurred on the server."
+      }
+    }
+  }
+},
+    "/v1/group/{chatId}": {
+  "get": {
+    "tags": ["Group"],
+    "summary": "Get Group Information",
+    "description": "Fetch detailed information about a specific group.",
+    "parameters": [
+      {
+        "name": "chatId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "The unique ID of the group whose information is being requested."
+        }
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Successfully retrieved group information.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Group Info",
+                  "description": "Message confirming that the group info was fetched successfully."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "groupId": {
+                      "type": "string",
+                      "example": "6761004ae53df23b7af3e07e",
+                      "description": "The unique ID of the group."
+                    },
+                    "groupName": {
+                      "type": "string",
+                      "example": "Demo Test Group",
+                      "description": "The name of the group."
+                    },
+                    "groupImage": {
+                      "type": "string",
+                      "example": "images-Screenshot 2024-05-28 114740.png",
+                      "description": "URL or path to the group's image."
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-17T04:38:34.806Z",
+                      "description": "The timestamp when the group was created."
+                    },
+                    "participants": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "67601dfa6307547d19944818",
+                            "description": "The unique ID of the participant."
+                          },
+                          "userName": {
+                            "type": "string",
+                            "example": "user4",
+                            "description": "The username of the participant."
+                          },
+                          "profilePicture": {
+                            "type": "string",
+                            "example": "images-Screenshot 2024-06-07 131757.png",
+                            "description": "URL or path to the profile picture of the participant."
+                          }
+                        }
+                      },
+                      "description": "List of participants in the group."
+                    },
+                    "admins": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "_id": {
+                            "type": "string",
+                            "example": "67601dfa6307547d19944818",
+                            "description": "The unique ID of the admin."
+                          },
+                          "userName": {
+                            "type": "string",
+                            "example": "user4",
+                            "description": "The username of the admin."
+                          }
+                        }
+                      },
+                      "description": "List of admins in the group."
+                    },
+                    "lastMessage": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "example": "676120c4399b614b712c6e5e",
+                          "description": "The unique ID of the last message."
+                        },
+                        "sender": {
+                          "type": "object",
+                          "properties": {
+                            "_id": {
+                              "type": "string",
+                              "example": "67601dfa6307547d19944818",
+                              "description": "The unique ID of the sender of the last message."
+                            },
+                            "userName": {
+                              "type": "string",
+                              "example": "user4",
+                              "description": "The username of the sender."
+                            }
+                          }
+                        },
+                        "content": {
+                          "type": "string",
+                          "example": "This message from another group",
+                          "description": "The content of the last message."
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-12-17T06:57:08.299Z",
+                          "description": "The timestamp when the last message was sent."
+                        }
+                      },
+                      "description": "Details of the last message sent in the group."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to view the group information."
+      }
+    }
+  }
+},
+   "/v1/group/messages/{groupChatId}": {
+  "get": {
+    "tags": ["Group"],
+    "summary": "Get Messages of a Group",
+    "description": "Retrieve a paginated list of messages for a specific group.",
+    "parameters": [
+      {
+        "name": "groupChatId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "The unique ID of the group chat whose messages are being fetched."
+        }
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "description": "The page number of the messages to retrieve. Default is 1."
+        }
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "description": "The number of messages to retrieve per page. Default is 10."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Successfully retrieved group messages.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Group messages.",
+                  "description": "Message confirming that the group messages were fetched successfully."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer",
+                          "example": 1,
+                          "description": "The current page number of the retrieved messages."
+                        },
+                        "limit": {
+                          "type": "integer",
+                          "example": 10,
+                          "description": "The number of messages retrieved per page."
+                        },
+                        "messages": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "_id": {
+                                "type": "string",
+                                "example": "676120c4399b614b712c6e5e",
+                                "description": "The unique ID of the message."
+                              },
+                              "content": {
+                                "type": "string",
+                                "example": "This message from another group",
+                                "description": "The content of the message."
+                              },
+                              "fileIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "example": "images-Screenshot 2024-07-22 170002.png",
+                                  "description": "The list of file IDs associated with the message (images, videos, etc.)."
+                                },
+                                "description": "List of file IDs attached to the message."
+                              },
+                              "isRead": {
+                                "type": "boolean",
+                                "example": false,
+                                "description": "Indicates whether the message has been read."
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "example": "2024-12-17T06:57:08.299Z",
+                                "description": "The timestamp when the message was created."
+                              },
+                              "senderDetails": {
+                                "type": "object",
+                                "properties": {
+                                  "_id": {
+                                    "type": "string",
+                                    "example": "67601dfa6307547d19944818",
+                                    "description": "The unique ID of the sender."
+                                  },
+                                  "userName": {
+                                    "type": "string",
+                                    "example": "user4",
+                                    "description": "The username of the sender."
+                                  }
+                                },
+                                "description": "Details of the message sender."
+                              }
+                            },
+                            "description": "List of messages in the group."
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - User does not have permission to view group messages."
+      }
+    }
+  }
+},
+    "/v1/group/delete/{chatId}": {
+  "delete": {
+    "tags": ["Group"],
+    "summary": "Delete a Group",
+    "description": "Delete a group by its unique chat ID. Only group admins can perform this action.",
+    "parameters": [
+      {
+        "name": "chatId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "The unique ID of the group to be deleted."
+        }
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication. Only authenticated users with admin privileges can delete the group."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Successfully deleted the group.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Group deleted successfully.",
+                  "description": "Message confirming the group was deleted."
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - Only group admins can delete the group."
+      }
+    }
+  }
+},
+    "/v1/saved-messages": {
+  "post": {
+    "tags": ["Saved Message"],
+    "summary": "Save a Message",
+    "description": "Allows a user to save a specific message by providing its message ID. The message can later be retrieved from the saved messages list.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication. Only authenticated users can save messages."
+        }
+      }
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "messageId": {
+                "type": "string",
+                "example": "677237bfe776d5678e0632a0",
+                "description": "The ID of the message to be saved."
+              }
+            },
+            "required": ["messageId"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Message saved successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Message saved successfully.",
+                  "description": "Confirmation message indicating the message was saved."
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - Access is forbidden for the current user."
+      }
+    }
+  },
+  "get": {
+    "tags": ["Saved Message"],
+    "summary": "Get Saved Messages",
+    "description": "Retrieve a list of all saved messages for the authenticated user with pagination support.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "example": "1",
+          "description": "Page number for pagination."
+        }
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "example": "10",
+          "description": "Number of saved messages to retrieve per page."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "List of saved messages.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Saved messages retrieved successfully.",
+                  "description": "Confirmation message indicating the saved messages were successfully retrieved."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer",
+                          "example": 1,
+                          "description": "Current page number."
+                        },
+                        "limit": {
+                          "type": "integer",
+                          "example": 10,
+                          "description": "Number of messages per page."
+                        },
+                        "savedMessages": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "messageId": {
+                                "type": "string",
+                                "description": "ID of the saved message."
+                              },
+                              "content": {
+                                "type": "string",
+                                "description": "Content of the saved message."
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time",
+                                "description": "The date and time the message was saved."
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - Access is forbidden for the current user."
+      }
+    }
+  }
+},
+    "/v1/unsaved-message": {
+  "delete": {
+    "tags": ["Saved Message"],
+    "summary": "Remove a Saved Message",
+    "description": "Allows a user to remove a previously saved message from their saved messages list by providing the message ID.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication. Only authenticated users can unsave messages."
+        }
+      }
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "messageId": {
+                "type": "string",
+                "example": "677237bfe776d5678e0632a0",
+                "description": "The ID of the message to be unsaved."
+              }
+            },
+            "required": ["messageId"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Message unsaved successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request. 1 indicates success."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Message unsaved successfully.",
+                  "description": "Confirmation message indicating the message was unsaved."
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - Access is forbidden for the current user."
+      }
+    }
+  }
+},
+
+    "/v1/stories/create-stories": {
+  "post": {
+    "tags": ["Stories"],
+    "summary": "Create New Story",
+    "description": "Upload a new story with media and caption. Supports image and video uploads via form data.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "multipart/form-data": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "files": {
+                "type": "string",
+                "format": "binary",
+                "description": "The file to be uploaded (image or video)."
+              },
+              "mediaType": {
+                "type": "string",
+                "enum": ["image", "video"],
+                "description": "The type of media being uploaded."
+              },
+              "caption": {
+                "type": "string",
+                "description": "Optional caption for the story."
+              }
+            },
+            "required": ["files", "mediaType"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Story uploaded successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Stories Uploaded Successfully.",
+                  "description": "Confirmation message indicating the story was successfully uploaded."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "example": "675aa7ff6fea1c0bd1881f07",
+                      "description": "ID of the user who uploaded the story."
+                    },
+                    "mediaUrl": {
+                      "type": "string",
+                      "example": "images-Screenshot 2024-05-29 165645.png",
+                      "description": "URL of the uploaded media file."
+                    },
+                    "mediaType": {
+                      "type": "string",
+                      "example": "image/png",
+                      "description": "MIME type of the uploaded media."
+                    },
+                    "caption": {
+                      "type": "string",
+                      "example": "Good Morning",
+                      "description": "Caption for the story."
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-31T09:19:08.879Z",
+                      "description": "Timestamp when the story will expire."
+                    },
+                    "viewers": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "List of user IDs who have viewed the story."
+                    },
+                    "_id": {
+                      "type": "string",
+                      "example": "6772658c9d6913ef9dc607d6",
+                      "description": "Unique ID of the story."
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-30T09:19:08.879Z",
+                      "description": "Timestamp when the story was created."
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-30T09:19:08.879Z",
+                      "description": "Timestamp when the story was last updated."
+                    },
+                    "__v": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "Version key for the story document."
+                    },
+                    "userName": {
+                      "type": "string",
+                      "example": "vishu12",
+                      "description": "Username of the user who uploaded the story."
+                    },
+                    "profilePicture": {
+                      "type": "string",
+                      "example": "images-Screenshot 2024-06-07 131757.png",
+                      "description": "Profile picture URL of the user who uploaded the story."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid input data."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - Access is forbidden for the current user."
+      }
+    }
+  }
+},
+
+    "/v1/stories/{storiesId}": {
+  "delete": {
+    "tags": ["Stories"],
+    "summary": "Delete Story",
+    "description": "Delete a specific story by its ID.",
+    "parameters": [
+      {
+        "name": "storiesId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "6772658c9d6913ef9dc607d6",
+          "description": "Unique ID of the story to be deleted."
+        }
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Story deleted successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Story Removed Successfully.",
+                  "description": "Confirmation message indicating the story was successfully deleted."
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid input data or missing required parameters."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - Access is forbidden for the current user."
+      }
+    }
+  }
+},
+
+    "/v1/stories": {
+  "get": {
+    "tags": ["Stories"],
+    "summary": "Retrieve All Stories",
+    "description": "Fetch all stories available for the authenticated user with pagination support.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      },
+      {
+        "name": "page",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "example": "1",
+          "description": "Page number for pagination."
+        }
+      },
+      {
+        "name": "limit",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "example": "10",
+          "description": "Number of stories to retrieve per page."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "All stories fetched successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "All stories fetched successfully",
+                  "description": "Confirmation message indicating the stories were successfully retrieved."
+                },
+                "data": {
+                  "type": "array",
+                  "description": "List of stories.",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "storyId": {
+                        "type": "string",
+                        "example": "6772658c9d6913ef9dc607d6",
+                        "description": "Unique ID of the story."
+                      },
+                      "mediaUrl": {
+                        "type": "string",
+                        "example": "images-Screenshot2024-05-29.png",
+                        "description": "URL of the media file associated with the story."
+                      },
+                      "mediaType": {
+                        "type": "string",
+                        "example": "image/png",
+                        "description": "Type of media (e.g., image or video)."
+                      },
+                      "caption": {
+                        "type": "string",
+                        "example": "Good Morning",
+                        "description": "Caption for the story."
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-12-30T09:19:08.879Z",
+                        "description": "The date and time the story was created."
+                      },
+                      "expiresAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-12-31T09:19:08.879Z",
+                        "description": "The expiration date and time of the story."
+                      },
+                      "userDetails": {
+                        "type": "object",
+                        "properties": {
+                          "userId": {
+                            "type": "string",
+                            "example": "675aa7ff6fea1c0bd1881f07",
+                            "description": "ID of the user who created the story."
+                          },
+                          "userName": {
+                            "type": "string",
+                            "example": "vishu12",
+                            "description": "Username of the story creator."
+                          },
+                          "profilePicture": {
+                            "type": "string",
+                            "example": "images-profilePicture.png",
+                            "description": "URL of the profile picture of the story creator."
+                          }
+                        }
+                      },
+                      "viewers": {
+                        "type": "array",
+                        "description": "List of users who viewed the story.",
+                        "items": {
+                          "type": "string",
+                          "example": "6763ec2315fdf3b3cdf3de56"
+                        }
+                      }
+                    }
+                  }
+                },
+                "pagination": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "Total number of stories."
+                    },
+                    "page": {
+                      "type": "integer",
+                      "example": 1,
+                      "description": "Current page number."
+                    },
+                    "limit": {
+                      "type": "integer",
+                      "example": 10,
+                      "description": "Number of stories per page."
+                    },
+                    "totalPages": {
+                      "type": "integer",
+                      "example": 0,
+                      "description": "Total number of pages available."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - Access is forbidden for the current user."
+      }
+    }
+  }
+},
+
+   "/v1/getUserStoriesWithViewerDetails": {
+  "get": {
+    "tags": ["Stories"],
+    "summary": "Retrieve User Stories with Viewer Details",
+    "description": "Fetch all stories created by the authenticated user, including details about viewers for each story.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "User stories retrieved successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Stories retrieved successfully.",
+                  "description": "Confirmation message indicating the stories were retrieved successfully."
+                },
+                "data": {
+                  "type": "array",
+                  "description": "List of stories with viewer details.",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "storyId": {
+                        "type": "string",
+                        "example": "6772658c9d6913ef9dc607d6",
+                        "description": "Unique ID of the story."
+                      },
+                      "mediaUrl": {
+                        "type": "string",
+                        "example": "images-Screenshot2024-05-29.png",
+                        "description": "URL of the media file associated with the story."
+                      },
+                      "mediaType": {
+                        "type": "string",
+                        "example": "image/png",
+                        "description": "Type of media (e.g., image or video)."
+                      },
+                      "caption": {
+                        "type": "string",
+                        "example": "Good Morning",
+                        "description": "Caption for the story."
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-12-30T09:19:08.879Z",
+                        "description": "The date and time the story was created."
+                      },
+                      "expiresAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2024-12-31T09:19:08.879Z",
+                        "description": "The expiration date and time of the story."
+                      },
+                      "viewers": {
+                        "type": "array",
+                        "description": "List of viewers for the story.",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "userId": {
+                              "type": "string",
+                              "example": "675aa7ff6fea1c0bd1881f07",
+                              "description": "ID of the viewer."
+                            },
+                            "userName": {
+                              "type": "string",
+                              "example": "vishu12",
+                              "description": "Username of the viewer."
+                            },
+                            "profilePicture": {
+                              "type": "string",
+                              "example": "images-profilePicture.png",
+                              "description": "URL of the viewer's profile picture."
+                            },
+                            "viewedAt": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2024-12-30T10:00:00.000Z",
+                              "description": "Timestamp when the viewer viewed the story."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "404": {
+        "description": "Stories not found.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 0,
+                  "description": "Status of the request."
+                },
+                "code": {
+                  "type": "string",
+                  "example": "STORIES_NOT_FOUND",
+                  "description": "Error code indicating that stories are not found."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Stories are not found.",
+                  "description": "Error message describing the issue."
+                },
+                "data": {
+                  "type": "array",
+                  "description": "An empty array when no stories are found.",
+                  "example": []
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - Access is forbidden for the current user."
+      }
+    }
+  }
+},
+    "/v1/stories/{storiesId}/view": {
+  "post": {
+    "tags": ["Stories"],
+    "summary": "View a Story",
+    "description": "Mark a story as viewed by the logged-in user. This action will update the story's viewer list in the database.",
+    "parameters": [
+      {
+        "name": "storiesId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Unique ID of the story to be viewed."
+        }
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Story viewed successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Story viewed successfully.",
+                  "description": "Confirmation message indicating the story was marked as viewed."
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid parameters or input."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - Access is forbidden for the current user."
+      },
+      "404": {
+        "description": "Not Found - The specified story does not exist."
+      }
+    }
+  }
+},
+
+    "/v1/generate-token": {
+  "post": {
+    "tags": ["Agora"],
+    "summary": "Generate Agora Token",
+    "description": "Generate an Agora token for real-time communication (e.g., voice or video calls).",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Token generated successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the request."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Token generated successfully.",
+                  "description": "Confirmation message indicating the token was successfully generated."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string",
+                      "example": "007eJxTYMidYznLZUNzXESmmEtn0oxHE1hZXgTbLVMPLDdx6F3aHKHAkGhsYGhmaWGSaJBoZJJsbpJoYGhuZGCSkmZummSeZGp2K6Mo/VVZUXpXbi0rIwMjAwsDIwOIzwQmmcEkC5hUYUhNMrdINkk20TVMSjPRNUk1tNC1MEw11LVItEgxMzRKNDBPNWBgAACJxC4R",
+                      "description": "The Agora token for authentication."
+                    },
+                    "channelName": {
+                      "type": "string",
+                      "example": "eb78c4c4-1bf4-4e18-81e1-8a8d612a07e0",
+                      "description": "Unique channel name associated with the token."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication is required."
+      },
+      "403": {
+        "description": "Forbidden - Access is forbidden for the current user."
+      }
+    }
+  }
+},
+
+   "/v1/create-channel": {
+  "post": {
+    "tags": ["Channel"],
+    "summary": "Create a New Channel",
+    "description": "Allows users to create a new channel with specified properties and members.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "multipart/form-data": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "channelName": {
+                "type": "string",
+                "example": "Hollywood Movie",
+                "description": "Name of the channel to be created."
+              },
+              "description": {
+                "type": "string",
+                "example": "hollywood movie list channel",
+                "description": "Brief description of the channel."
+              },
+              "privacy": {
+                "type": "string",
+                "enum": ["public", "private"],
+                "example": "public",
+                "description": "Channel visibility: 'public' or 'private'."
+              },
+              "admins": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["675aa7ff6fea1c0bd1881f07"],
+                "description": "List of admin user IDs for the channel."
+              },
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["675aa7ff6fea1c0bd1881f07"],
+                "description": "List of member user IDs to add to the channel."
+              },
+              "files": {
+                "type": "string",
+                "format": "binary",
+                "description": "Optional file attachments for the channel."
+              }
+            },
+            "required": ["channelName", "privacy"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Channel created successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the operation."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Channel created.",
+                  "description": "Confirmation message."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "channelName": {
+                      "type": "string",
+                      "example": "Hollywood Movie",
+                      "description": "Name of the created channel."
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "hollywood movie list channel",
+                      "description": "Description of the channel."
+                    },
+                    "privacy": {
+                      "type": "string",
+                      "example": "public",
+                      "description": "Channel privacy setting."
+                    },
+                    "createdBy": {
+                      "type": "string",
+                      "example": "675aa7ff6fea1c0bd1881f07",
+                      "description": "User ID of the creator."
+                    },
+                    "admins": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": ["675aa7ff6fea1c0bd1881f07"],
+                      "description": "List of admin user IDs."
+                    },
+                    "members": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "userId": {
+                            "type": "string",
+                            "example": "675aa7ff6fea1c0bd1881f07"
+                          },
+                          "role": {
+                            "type": "string",
+                            "example": "admin"
+                          },
+                          "_id": {
+                            "type": "string",
+                            "example": "6772697efad39b2788a726b7"
+                          }
+                        }
+                      },
+                      "description": "Details of the channel members."
+                    },
+                    "inviteLink": {
+                      "type": "string",
+                      "example": null,
+                      "description": "Optional invite link for the channel."
+                    },
+                    "_id": {
+                      "type": "string",
+                      "example": "6772697efad39b2788a726b6",
+                      "description": "Unique ID of the channel."
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-12-30T09:35:58.272Z",
+                      "description": "Timestamp when the channel was created."
+                    },
+                    "__v": {
+                      "type": "integer",
+                      "example": 0
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Bad Request - Invalid input or missing required parameters."
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - Insufficient permissions to create a channel."
+      }
+    }
+  }
+},
+
+    "/v1/channels/{channelId}": {
+  "get": {
+    "tags": ["Channel"],
+    "summary": "Get Channel Details",
+    "description": "Retrieve detailed information about a specific channel, including its members, admins, and messages.",
+    "parameters": [
+      {
+        "name": "channelId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Unique identifier of the channel."
+        },
+        "example": "6772697efad39b2788a726b6"
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Channel details retrieved successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the operation."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Channel Detail.",
+                  "description": "Confirmation message."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "channel": {
+                      "type": "object",
+                      "properties": {
+                        "_id": {
+                          "type": "string",
+                          "example": "6772697efad39b2788a726b6",
+                          "description": "Unique ID of the channel."
+                        },
+                        "channelName": {
+                          "type": "string",
+                          "example": "Hollywood Movie",
+                          "description": "Name of the channel."
+                        },
+                        "description": {
+                          "type": "string",
+                          "example": "hollywood movie list channel",
+                          "description": "Description of the channel."
+                        },
+                        "privacy": {
+                          "type": "string",
+                          "example": "public",
+                          "description": "Channel privacy setting."
+                        },
+                        "createdBy": {
+                          "type": "string",
+                          "example": "675aa7ff6fea1c0bd1881f07",
+                          "description": "User ID of the creator."
+                        },
+                        "admins": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "_id": {
+                                "type": "string",
+                                "example": "675aa7ff6fea1c0bd1881f07",
+                                "description": "Admin user ID."
+                              },
+                              "userName": {
+                                "type": "string",
+                                "example": "vishu12",
+                                "description": "Admin username."
+                              },
+                              "profilePicture": {
+                                "type": "string",
+                                "example": "images-Screenshot 2024-06-07 131757.png",
+                                "description": "Admin's profile picture URL."
+                              }
+                            }
+                          },
+                          "description": "List of admins for the channel."
+                        },
+                        "members": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "userId": {
+                                "type": "string",
+                                "example": "675aa7ff6fea1c0bd1881f07",
+                                "description": "Member's user ID."
+                              },
+                              "role": {
+                                "type": "string",
+                                "example": "admin",
+                                "description": "Role of the member in the channel."
+                              },
+                              "_id": {
+                                "type": "string",
+                                "example": "6772697efad39b2788a726b7",
+                                "description": "Unique ID of the membership."
+                              }
+                            }
+                          },
+                          "description": "List of members in the channel."
+                        },
+                        "inviteLink": {
+                          "type": "string",
+                          "example": null,
+                          "description": "Optional invite link for the channel."
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-12-30T09:35:58.272Z",
+                          "description": "Timestamp when the channel was created."
+                        },
+                        "__v": {
+                          "type": "integer",
+                          "example": 0,
+                          "description": "Version key."
+                        }
+                      }
+                    },
+                    "messages": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      },
+                      "example": [],
+                      "description": "List of messages in the channel."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - Insufficient permissions to view the channel."
+      }
+    }
+  },
+  "put": {
+    "tags": ["Channel"],
+    "summary": "Update Channel Details",
+    "description": "Allows an admin to update channel details, such as the name.",
+    "parameters": [
+      {
+        "name": "channelId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Unique identifier of the channel to be updated."
+        },
+        "example": "6772697efad39b2788a726b6"
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "requestBody": {
+      "content": {
+        "multipart/form-data": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "channelName": {
+                "type": "string",
+                "description": "New name for the channel.",
+                "example": "Updated Channel Name"
+              }
+            },
+            "required": ["channelName"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Channel updated successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the operation."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Update successfully.",
+                  "description": "Confirmation message."
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - Insufficient permissions to update the channel."
+      }
+    }
+  },
+  "post": {
+    "tags": ["Channel"],
+    "summary": "Remove a member from the channel",
+    "description": "Allows an admin to remove a member from a channel. This action can only be performed by an admin.",
+    "parameters": [
+      {
+        "name": "channelId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Unique identifier of the channel from which the member will be removed.",
+          "example": "6772697efad39b2788a726b6"
+        }
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Member removed successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the operation."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Member removed from the channel.",
+                  "description": "Confirmation message."
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - The user does not have permission to remove the member."
+      }
+    }
+  },
+  "delete": {
+    "tags": ["Channel"],
+    "summary": "Delete a channel",
+    "description": "Allows an admin to delete a channel. This action can only be performed by an admin of the channel.",
+    "parameters": [
+      {
+        "name": "channelId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Unique identifier of the channel to be deleted.",
+          "example": "6772697efad39b2788a726b6"
+        }
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Channel deleted successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the operation."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Delete successfully.",
+                  "description": "Confirmation message."
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - The user does not have permission to delete the channel."
+      }
+    }
+  }
+    },
+    "/v1/channels": {
+  "get": {
+    "tags": ["Channel"],
+    "summary": "List all channels",
+    "description": "Retrieve a list of all channels. You can filter channels by privacy and search for specific channels.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      },
+      {
+        "name": "privacy",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "description": "Filter channels by privacy (e.g., 'public' or 'private')."
+        }
+      },
+      {
+        "name": "search",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "description": "Search channels by name or description."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "List of channels fetched successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the operation."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "List of channel.",
+                  "description": "Message indicating successful retrieval of the channel list."
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "_id": {
+                        "type": "string",
+                        "example": "6772697efad39b2788a726b6",
+                        "description": "Unique identifier of the channel."
+                      },
+                      "channelName": {
+                        "type": "string",
+                        "example": "Hollywood Movie",
+                        "description": "Name of the channel."
+                      },
+                      "description": {
+                        "type": "string",
+                        "example": "hollywood movie list channel",
+                        "description": "Description of the channel."
+                      },
+                      "privacy": {
+                        "type": "string",
+                        "example": "public",
+                        "description": "Privacy setting of the channel."
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - The user does not have permission to view the channels."
+      }
+    }
+  }
+},
+
+    "/v1/channels/{channelId}/join": {
+  "post": {
+    "tags": ["Channel"],
+    "summary": "Join a channel",
+    "description": "User can join a channel using an invite link. The channel will be updated with the new member.",
+    "parameters": [
+      {
+        "name": "channelId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Unique identifier of the channel."
+        }
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "inviteLink": {
+                "type": "string",
+                "example": "http://localhost:3000",
+                "description": "Invite link to join the channel."
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Successfully joined the channel.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the operation."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Joined the channel",
+                  "description": "Message indicating the user has successfully joined the channel."
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - The user does not have permission to join the channel."
+      }
+    }
+  }
+},
+
+    "/v1/channels/{channelId}/leave": {
+  "post": {
+    "tags": ["Channel"],
+    "summary": "Leave a channel",
+    "description": "User can leave a channel. After the request, the user will be removed from the channel's member list.",
+    "parameters": [
+      {
+        "name": "channelId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Unique identifier of the channel the user wishes to leave."
+        }
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Successfully left the channel.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the operation."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Left the channel",
+                  "description": "Message indicating the user has successfully left the channel."
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - The user does not have permission to leave the channel."
+      }
+    }
+  }
+},
+
+    "/v1/channels/{channelId}/members/add": {
+  "post": {
+    "tags": ["Channel"],
+    "summary": "Add a new member to a channel",
+    "description": "Admin can add a new member to the channel. This operation allows an admin to specify the member by their unique `memberId`.",
+    "parameters": [
+      {
+        "name": "channelId",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Unique identifier of the channel to which a new member will be added."
+        }
+      },
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "requestBody": {
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "memberId": {
+                "type": "string",
+                "example": "675aa7ff6fea1c0bd1881f07",
+                "description": "The ID of the user to be added as a member to the channel."
+              }
+            },
+            "required": ["memberId"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Successfully added a new member to the channel.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the operation."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Member added to the channel",
+                  "description": "Message indicating that the member has been successfully added."
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - The user does not have permission to add members to the channel."
+      }
+    }
+  }
+},
+"/v1/channels/message/sent": {
+  "post": {
+    "tags": ["Channel"],
+    "summary": "Send a message to a channel",
+    "description": "Admin can send a message to the channel, including text and files. The message is sent with a specified content type and can include file attachments.",
+    "parameters": [
+      {
+        "name": "authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "description": "Bearer token for authentication."
+        }
+      }
+    ],
+    "requestBody": {
+      "content": {
+        "multipart/form-data": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "channelId": {
+                "type": "string",
+                "description": "The unique identifier of the channel where the message is to be sent."
+              },
+              "content": {
+                "type": "string",
+                "description": "The content of the message (e.g., text)."
+              },
+              "type": {
+                "type": "string",
+                "enum": ["text"],
+                "description": "The type of message content. Currently, only 'text' is supported."
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "description": "File associated with the message."
+                },
+                "description": "Files attached to the message."
+              },
+              "fileUrl": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "URLs for the files attached to the message."
+                },
+                "description": "URLs for the files associated with the message."
+              }
+            },
+            "required": ["channelId", "content"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Message sent successfully.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Status of the operation."
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Message sent successfully.",
+                  "description": "Message indicating that the message was sent successfully."
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "channelId": {
+                      "type": "string",
+                      "example": "67727089996ef2824bd20283"
+                    },
+                    "sender": {
+                      "type": "string",
+                      "example": "675aa7ff6fea1c0bd1881f07"
+                    },
+                    "content": {
+                      "type": "string",
+                      "example": "This message from member"
+                    },
+                    "type": {
+                      "type": "string",
+                      "example": "text"
+                    },
+                    "fileIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "images-Screenshot 2024-05-29 165645.png"
+                      }
+                    },
+                    "isDeleted": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "deletedFor": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "isRead": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "_id": {
+                      "type": "string",
+                      "example": "677270a2996ef2824bd20288"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "example": "2024-12-30T10:06:26.408Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - Authentication required."
+      },
+      "403": {
+        "description": "Forbidden - The user does not have permission to send a message to the channel."
+      }
+    }
+  }
+},
+    "/v1/push": {
+      "post": {
+        "tags": ["Push"],
+        "description": "push notification",
+        "responses": {
+          "default": {
+            "description": ""
+          }
+        },
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "example": "any"
+                  },
+                  "deviceToken": {
+                    "example": "any"
+                  },
+                  "deviceType": {
+                    "example": "any"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
