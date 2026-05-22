@@ -3,8 +3,8 @@ import mongoose, { Document, Schema } from "mongoose";
 interface IChatParticipant extends Document{
     userId: mongoose.Types.ObjectId;
     chatId: mongoose.Types.ObjectId;
-    lastClearedMessageId?: mongoose.Types.ObjectId;
-    lastReadMessageId?: mongoose.Types.ObjectId;
+    lastClearedMessageId?: mongoose.Types.ObjectId | null;
+    lastReadMessageId?: mongoose.Types.ObjectId | null;
     isArchived?:boolean;
     isRemoved?:boolean;
     isDeleted?:boolean;

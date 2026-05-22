@@ -1,6 +1,6 @@
 import {Request, Response} from "express"
 import { successCreated, successResponse } from "../../helper/apiResponse"
-import { clearAllChatLogic, createNewChatLogic, deleteChatApi, deleteMessageLogic, getConversationsLogic, getForwardedConversationsLogic, getMessagesOfChatIDLogic, sendMessageLogic } from "../../domain/models/chat.model";
+import { clearAllChatLogic, createNewChatLogic, deleteChatApi, deleteMessageLogic, getConversationsLogic, getForwardedConversationsLogic, getMessagesOfChatIDLogic, sendMessageLogic } from "../../domain/services/chat.service";
 import { loggerMsg } from "../../lib/logger";
 
 // create New Chat between two user or return existing user chat

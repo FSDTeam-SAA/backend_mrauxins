@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { successCreated, successResponse } from "../../helper/apiResponse";
-import { generateAgoraTokenLogic, getAgoraAppIdLogic, handleOtp, handleUserVerification } from "../../domain/models/user.model";
+import { generateAgoraTokenLogic, getAgoraAppIdLogic, handleOtp, handleUserVerification } from "../../domain/services/user.service";
 import {v4 as uuidv4} from "uuid"
 
 // sendOtp

@@ -1,6 +1,6 @@
 import {Request, Response} from "express"
 import { successCreated, successResponse } from "../../helper/apiResponse"
-import { addMembersLogic, assignAdminLogic, createGroupLogic, deleteGroupLogic, getGroupInfoLogic, groupConversationsLogic, leaveGroupLogic, removeMemberLogic, updateGroupInfoLogic } from "../../domain/models/chat.model";
+import { addMembersLogic, assignAdminLogic, createGroupLogic, deleteGroupLogic, getGroupInfoLogic, groupConversationsLogic, leaveGroupLogic, removeMemberLogic, updateGroupInfoLogic } from "../../domain/services/chat.service";
 
 
 // create a New group Api

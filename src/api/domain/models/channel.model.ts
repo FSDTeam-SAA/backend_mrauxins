@@ -632,8 +632,7 @@ export const updateChannelDetailsLogic = async (
 
         await chatSchema.updateOne(
             { _id: chatId }, // filter
-            { $set: reqBody }, // update
-            { new: true } // options
+            { $set: reqBody } // update
         );
 
         return callback(null, "Updated successfully.");

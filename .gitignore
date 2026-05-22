@@ -9,3 +9,10 @@ package-lock.json
 logs
 images
 src/assets
+
+# Build artifacts and generated files
+index.js
+index.js.map
+tsconfig.tsbuildinfo
+src/swagger-output.json
+src/api/helper/keys/

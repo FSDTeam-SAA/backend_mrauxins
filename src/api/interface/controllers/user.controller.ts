@@ -1,6 +1,6 @@
 import e, { Request, Response } from "express"
 import mongoose from "mongoose";
-import { addOrUpdateNickname, adsConfigLogic, changeEmailAddress, getAllUsersLogic, getSingleUserDetailsLogicApi, isUserNameExist, updateContacts, updateNicknameToggle, updateUserProfileLogic, uploadMediaOnS3Bucket, userAccountDeleted, usersNewRefreshToken, verifyEmailAddress } from "../../domain/models/user.model";
+import { addOrUpdateNickname, adsConfigLogic, changeEmailAddress, getAllUsersLogic, getSingleUserDetailsLogicApi, isUserNameExist, updateContacts, updateNicknameToggle, updateUserProfileLogic, uploadMediaOnS3Bucket, userAccountDeleted, usersNewRefreshToken, verifyEmailAddress } from "../../domain/services/user.service";
 import { ErrorResponse, successCreated, successResponse } from "../../helper/apiResponse";
 import { loggerMsg } from "../../lib/logger";
 import userSchema from "../../domain/schema/user.schema";
