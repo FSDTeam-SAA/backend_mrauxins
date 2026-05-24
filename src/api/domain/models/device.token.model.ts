@@ -158,9 +158,9 @@ export const sentPushNotificationToUser = async (userId: string, {
                 },
             },
             apns:{
-                // headers: {
-                //     "apns-priority": "10"
-                // },
+                headers: {
+                    "apns-priority": "10"
+                },
                 payload: {
                     aps:{
                         "content-available": 1,
@@ -200,7 +200,7 @@ export const sentPushNotificationToUser = async (userId: string, {
         // Always send sound for ios incoming calls
         if(deviceType === "ios" && isInComeingCall){
             message.apns.payload.aps["sound"] = "bell_standard_call.caf"
-        }else if(isMuteNotification === false){
+        }else if(!isMuteNotification){
             message.apns.payload.aps["sound"] = "default"
         }else{
             // Explicitly remove the sound key if notifications are muted
