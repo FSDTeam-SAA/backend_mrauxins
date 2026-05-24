@@ -1013,6 +1013,9 @@ export const getConversationsLogic = async (
                     updatedAt: 1,
                     privacy:1,
                     inviteLink:1,
+                    hideMembersInfo:1,
+                    hideNewMembersMessage:1,
+                    restrictContentSharing:1,
                     createdBy: 1,
                     encryptedAESKey: 1,
                     isProfilePhoto: 1,
@@ -1347,6 +1350,9 @@ export const getConversationsLogic = async (
                     updatedAt: 1,
                     privacy:1,
                     inviteLink:1,
+                    hideMembersInfo:1,
+                    hideNewMembersMessage:1,
+                    restrictContentSharing:1,
                     createdBy: 1,
                     encryptedAESKey: 1,
                     isProfilePhoto: 1,
@@ -1750,6 +1756,9 @@ export const getForwardedConversationsLogic = async (
                     updatedAt: 1,
                     privacy:1,
                     inviteLink:1,
+                    hideMembersInfo:1,
+                    hideNewMembersMessage:1,
+                    restrictContentSharing:1,
                     createdBy: 1,
                     encryptedAESKey: 1,
                     isProfilePhoto: 1,
@@ -2267,6 +2276,15 @@ export const clearChatForUser = async (userId: string, chatId: string) => {
 
 // =========================== Groups =======================================
 
+const toBoolean = (value: any, fallback = false): boolean => {
+    if (value === undefined || value === null || value === "") return fallback;
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") return value.toLowerCase() === "true";
+    return Boolean(value);
+};
+
+const createInviteLink = (chatId: string) => `the212.me/+${chatId}${new mongoose.Types.ObjectId().toString()}`;
+
 export const createGroupLogic = async (
     reqBody: any,
     creatorId: string,
@@ -2274,7 +2292,7 @@ export const createGroupLogic = async (
     callback: (error: any, result: any) => void
 ) => {
     try {
-        const { chatType, groupName, description, privacy, admins, participants, isProfilePhoto, isSendMessage } = reqBody;
+        const { chatType, groupName, description, privacy, admins, participants, isProfilePhoto, isSendMessage, hideMembersInfo, hideNewMembersMessage, restrictContentSharing } = reqBody;
 
         const groupCreator = await userSchema.findById(creatorId).select("_id name userName profilePicture");
 
@@ -2294,17 +2312,23 @@ export const createGroupLogic = async (
             .lean();
 
         const aesKey = generateAESKeys();
+        const newChatId = new mongoose.Types.ObjectId();
+        const chatPrivacy = privacy === "private" ? "private" : "public";
         const newChat = new chatSchema({
+            _id: newChatId,
             type: chatType,
             groupName,
             description: chatType === ChatType.CHANNEL ? description : undefined,
-            privacy: chatType === ChatType.CHANNEL ? privacy : undefined,
+            privacy: chatPrivacy,
             createdBy: new mongoose.Types.ObjectId(creatorId),
             admins: adminList.map(id => new mongoose.Types.ObjectId(id)),
             participants: allParticipants,
-            isProfilePhoto,
-            isSendMessage,
-            inviteLink: chatType === ChatType.CHANNEL && privacy === "private" ? "http://localhost:3000" : null,
+            isProfilePhoto: toBoolean(isProfilePhoto, true),
+            isSendMessage: toBoolean(isSendMessage, chatType === ChatType.GROUP),
+            hideMembersInfo: toBoolean(hideMembersInfo),
+            hideNewMembersMessage: toBoolean(hideNewMembersMessage),
+            restrictContentSharing: toBoolean(restrictContentSharing),
+            inviteLink: createInviteLink(newChatId.toString()),
             encryptedAESKey: aesKey,
             isFirstMessage:1
         });
@@ -2369,7 +2393,7 @@ export const createGroupLogic = async (
         await messageSchema.create(groupCreatedMessage);
 
         // **Create System Messages for All Participants**
-        const systemMessages = await Promise.all(parsedParticipants.map(async (userId: any) => {
+        const systemMessages = newChat.hideNewMembersMessage ? [] : await Promise.all(parsedParticipants.map(async (userId: any) => {
             const userDetails = await userSchema.findById(userId).select("name").lean();
             return {
                 chatId,
@@ -2485,7 +2509,7 @@ export const addMembersLogic = async (
         await chatParticipantSchema.bulkWrite(bulkUpdates);
 
         // Create system messages
-        const systemMessages = allAddedMembers.map(member => ({
+        const systemMessages = chat.hideNewMembersMessage ? [] : allAddedMembers.map(member => ({
             chatId,
             sender: {
                 _id: loggedinUser?._id,
@@ -2515,7 +2539,9 @@ export const addMembersLogic = async (
                 profilePicture: null
             }
         }));
-        await messageSchema.insertMany(systemMessages);
+        if (systemMessages.length > 0) {
+            await messageSchema.insertMany(systemMessages);
+        }
 
         // Send notifications and emit socket events to all users
         await sendNotificationsAndEmitEvents(chat, loggedinUser, io, systemMessages, allAddedMembers);
@@ -3355,11 +3381,16 @@ export const getGroupInfoLogic = async (
             createdAt: group.createdAt,
             createdBy: group.createdBy,
             type: group.type,
-            participants, // Updated participants list
-            admins,
+            participants: group.hideMembersInfo && !isAdmin ? [] : participants,
+            admins: group.hideMembersInfo && !isAdmin ? [] : admins,
             lastMessage: group.lastMessage,
             isProfilePhoto: group.isProfilePhoto,
             isSendMessage: group.isSendMessage,
+            privacy: group.privacy,
+            inviteLink: group.inviteLink,
+            hideMembersInfo: group.hideMembersInfo,
+            hideNewMembersMessage: group.hideNewMembersMessage,
+            restrictContentSharing: group.restrictContentSharing,
             isAdmin, // Whether the current user is an admin
         };
 
@@ -3551,7 +3582,7 @@ export const updateGroupInfoLogic = async (
     files: any,
     callback: (error: any, result: any) => void
 ) => {
-    const { groupName, isProfilePhoto, isSendMessage,chatType } = reqBody;
+    const { groupName, isProfilePhoto, isSendMessage, chatType, privacy, hideMembersInfo, hideNewMembersMessage, restrictContentSharing } = reqBody;
     try {
         // Find the group chat (Now uses `ChatType.GROUP` instead of `isGroup`)
         const chat = await chatSchema.findOne({ _id: chatId, type: chatType });
@@ -3585,8 +3616,15 @@ export const updateGroupInfoLogic = async (
         // ✅ Update allowed fields
         if (groupName !== undefined) chat.groupName = groupName;
         if (isProfilePhoto !== undefined)
-            chat.isProfilePhoto = isProfilePhoto;
-        if (isSendMessage !== undefined) chat.isSendMessage = isSendMessage;
+            chat.isProfilePhoto = toBoolean(isProfilePhoto, chat.isProfilePhoto);
+        if (isSendMessage !== undefined) chat.isSendMessage = toBoolean(isSendMessage, chat.isSendMessage);
+        if (privacy !== undefined) {
+            chat.privacy = privacy === "private" ? "private" : "public";
+            if (!chat.inviteLink) chat.inviteLink = createInviteLink(chat._id.toString());
+        }
+        if (hideMembersInfo !== undefined) chat.hideMembersInfo = toBoolean(hideMembersInfo, chat.hideMembersInfo);
+        if (hideNewMembersMessage !== undefined) chat.hideNewMembersMessage = toBoolean(hideNewMembersMessage, chat.hideNewMembersMessage);
+        if (restrictContentSharing !== undefined) chat.restrictContentSharing = toBoolean(restrictContentSharing, chat.restrictContentSharing);
         
         // ✅ Handle group profile picture update
         if (files && files.length > 0) {

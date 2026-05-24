@@ -4,7 +4,6 @@ node_modules/
 build/
 tmp/
 temp/
-.env
 package-lock.json
 logs
 images
@@ -16,3 +15,7 @@ index.js.map
 tsconfig.tsbuildinfo
 src/swagger-output.json
 src/api/helper/keys/
+config.bat
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
