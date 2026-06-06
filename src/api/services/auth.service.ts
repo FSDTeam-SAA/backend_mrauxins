@@ -2,10 +2,12 @@
 import nodemailer from "nodemailer";
 import { env } from "../../infrastructure/env";
 
+const smtpPort = Number(env.SMTP_PORT || 587);
+
 const transportOptions: any = {
     host:env.SMTP_HOST,
-    port:env.SMTP_PORT,
-    secure: true,
+    port:smtpPort,
+    secure: smtpPort === 465,
     auth:{
         user: env.SMTP_USER,
         pass: env.SMTP_PASS
@@ -27,7 +29,7 @@ const transport = nodemailer.createTransport(transportOptions)
 
 const sendEmail = async(to:string, subject:string, text:string, html:string)=>{
     const mailOptions = {
-        from: `${env.EMAIL_FROM_NAME} ${env.DEFAULT_EMAIL_FROM}`,
+        from: `${env.EMAIL_FROM_NAME || "212 Messenger"} <${env.DEFAULT_EMAIL_FROM || env.SMTP_USER}>`,
         to: to,// "vishvadattfreshcode@gmail.com",
         subject: subject,
         text: text,
@@ -40,6 +42,7 @@ const sendEmail = async(to:string, subject:string, text:string, html:string)=>{
         return info.messageId
     } catch (error) {
         console.error("Error sending email.",error);
+        throw error;
     }
 }
 
@@ -49,10 +52,10 @@ export const sentOtpService = async(email:string,otp:string) => {
     try {
         // here is call otp sent function
         // Example usage
-        const response = await sendEmail(
+        await sendEmail(
             email, // Receiver's email address
             'Welcome to Our 212 Messenger App.',     // Subject
-            'Hello, this is a welcome message!', // Text content
+            `Your 212 Messenger OTP is ${otp}`, // Text content
             `<h1>OTP, ${otp}</h1>` // HTML content
         );
         

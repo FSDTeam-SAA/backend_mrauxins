@@ -1,6 +1,6 @@
 import {Request, Response} from "express"
 import { successCreated, successResponse } from "../../helper/apiResponse"
-import { addMembersLogic, assignAdminLogic, createGroupLogic, deleteGroupLogic, getGroupInfoLogic, groupConversationsLogic, leaveGroupLogic, removeMemberLogic, updateGroupInfoLogic } from "../../domain/services/chat.service";
+import { addMembersLogic, assignAdminLogic, createGroupLogic, deleteGroupLogic, getGroupInfoLogic, groupConversationsLogic, leaveGroupLogic, removeMemberLogic, revokeGroupInviteLinkLogic, updateGroupInfoLogic } from "../../domain/services/chat.service";
 
 
 // create a New group Api
@@ -240,5 +240,28 @@ export const updateGroupInfo = async(req:Request, res:Response)=>{
             })
         }
         return successResponse(res, "Group details updated successfully.",result)
+    })
+}
+
+export const revokeGroupInviteLink = async(req: Request, res: Response) => {
+    const userId = req.user.userId;
+    const { chatId } = req.params;
+
+    if (!chatId) {
+        return res.status(400).json({
+            code: "CHAT_ID_REQUIRED",
+            message: "Chat ID is required."
+        });
+    }
+
+    revokeGroupInviteLinkLogic(userId, chatId, (error, result) => {
+        if (error) {
+            return res.status(error.status).json({
+                status: error?.status,
+                code: error?.code,
+                message: error?.message
+            });
+        }
+        return successResponse(res, "Invite link revoked successfully.", result)
     })
 }

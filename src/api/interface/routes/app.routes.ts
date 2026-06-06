@@ -7,7 +7,7 @@ import {  accountDeleted, adsConfig, checkUserName, getAllUsers, getDetailsOfSin
 import upload, { decryptMessage, decryptMessage_1, descryptedContent, encryptMessage_1 } from "../../helper/helper";
 import {  createNewChat, getConversations,  getMessagesOfChatID,  sendMessage, uploadMediaOnChat, deleteMessage, clearAllChat, deleteChat, forwardConversations } from "../controllers/chat.controller";
 import { getSavedMessages, saveMessage, sendSavedMessages, unsaveMessage } from "../controllers/save.messages.controller";
-import { addMembers,createGroup, groupConversations, assignAdminToGroup, leaveGroup, removeMember, getGroupInfo, deleteGroup, updateGroupInfo} from "../controllers/group.controller";
+import { addMembers,createGroup, groupConversations, assignAdminToGroup, leaveGroup, removeMember, getGroupInfo, deleteGroup, updateGroupInfo, revokeGroupInviteLink} from "../controllers/group.controller";
 import { createStory, deleteStories, getAllStories, getAllStories1, getUserStoriesWithViewerDetails, getUserStoriesWithViewerDetails1, viewStory } from "../controllers/stories.controller";
 import { addMemberToChannel, createChannel, deleteChannel, generateInviteLink, getChannelDetails, joinChannel, leaveChannel, listChannels, removeMemberFromChannel, sentMessageToChannel, updateChannelDetails } from "../controllers/channel.controller";
 import { deleteDeviceToken, replaceToken, saveDeviceTokenApi } from "../controllers/devicetoken.controller";
@@ -110,6 +110,9 @@ export const appRoute = (router: express.Router): void => {
 
         // Update group info api
         route.put("/group/update/:chatId",protectedRoute,upload.array("files",5), updateGroupInfo)
+
+        // Revoke and regenerate group invite link api
+        route.post("/group/revoke-invite-link/:chatId", protectedRoute, revokeGroupInviteLink)
 
         /** ++++++++++++++++++++++++++ SavedMessage Api ++++++++++++++++++++++++++++++ */
         route.post("/send/saved-messages", protectedRoute,upload.array("files",5), sendSavedMessages)

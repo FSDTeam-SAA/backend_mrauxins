@@ -81,6 +81,10 @@ export const adsConfigData = {
     ]
 };
 
+const shouldSendOtpEmail = () => {
+    return Boolean(env.SMTP_HOST && env.SMTP_PORT && env.SMTP_USER && env.SMTP_PASS);
+};
+
 export const adsConfigLogic = async(
     callback:(error:any, result:any) => void
 )=>{
@@ -117,12 +121,7 @@ export const handleOtp = async (email:string, callback:any) => {
     try {
         let user = await userSchema.findOne({ email }).select('otp otpExpiry');
 
-        let otp;
-        if(email === "test@gmail.com"){
-            otp = "123456"
-        }else{
-            otp = env.NODE_ENV === "development" ? generateOtp() : "123456";
-        }
+        const otp = email === "test@gmail.com" ? "123456" : generateOtp();
         // const otp = "123456";
         let otpExpiry = new Date();
         otpExpiry.setMinutes(otpExpiry.getMinutes() + 10);
@@ -138,8 +137,11 @@ export const handleOtp = async (email:string, callback:any) => {
         user.isEmailVerify= false,
         await user.save();
         
-        // If OTP email sending is needed
-        env.NODE_ENV ==="development" && await sentOtpService(email, otp);  // Call external service for email
+        if (shouldSendOtpEmail()) {
+            await sentOtpService(email, otp);
+        } else {
+            loggerMsg("SMTP is not configured. Skipping OTP email send.", "warn");
+        }
 
         return callback(null, "Otp Sent Successfully");
     } catch (error) {
@@ -1275,13 +1277,7 @@ export const changeEmailAddress = async(
             }, null)
         }
 
-        // const otp = env.NODE_ENV === "development" ? generateOtp() : "123456";
-        let otp;
-        if(email === "test@gmail.com"){
-            otp = "123456"
-        }else{
-            otp = env.NODE_ENV === "development" ? generateOtp() : "123456";
-        }
+        const otp = email === "test@gmail.com" ? "123456" : generateOtp();
         
         // const otp = "123456";
         let otpExpiry = new Date();
@@ -1291,7 +1287,11 @@ export const changeEmailAddress = async(
         user.otpExpiry = otpExpiry;
         await user.save();
 
-        env.NODE_ENV ==="development" && await sentOtpService(email, otp);
+        if (shouldSendOtpEmail()) {
+            await sentOtpService(email, otp);
+        } else {
+            loggerMsg("SMTP is not configured. Skipping OTP email send.", "warn");
+        }
 
         return callback(null,"Otp send successfully.")
     } catch (error) {

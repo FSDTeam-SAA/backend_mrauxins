@@ -14,6 +14,7 @@ export {
     groupConversationsLogic,
     leaveGroupLogic,
     removeMemberLogic,
+    revokeGroupInviteLinkLogic,
     sendMessageLogic,
     updateGroupInfoLogic,
 } from "../models/chat.model";

@@ -3649,6 +3649,62 @@ export const updateGroupInfoLogic = async (
     }
 };
 
+export const revokeGroupInviteLinkLogic = async (
+    userId: string,
+    chatId: string,
+    callback: (error: any, result: any) => void
+) => {
+    try {
+        const chat = await chatSchema.findOne({ _id: chatId, type: ChatType.GROUP });
+
+        if (!chat) {
+            return callback(
+                {
+                    status: 404,
+                    code: "CHAT_NOT_FOUND",
+                    message: "Group chat not found.",
+                },
+                null
+            );
+        }
+
+        const isAdmin = chat.admins.some(
+            (adminId) => adminId.toString() === userId
+        );
+        if (!isAdmin) {
+            return callback(
+                {
+                    status: 400,
+                    code: "FORBIDDEN",
+                    message: "Only admins can revoke invite links.",
+                },
+                null
+            );
+        }
+
+        chat.inviteLink = createInviteLink(chat._id.toString());
+        await chat.save();
+
+        return callback(null, {
+            groupId: chat._id,
+            inviteLink: chat.inviteLink,
+            privacy: chat.privacy,
+        });
+    } catch (error) {
+        return callback(
+            {
+                status: 500,
+                code: "INTERNAL_SERVER_ERROR",
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : "An unexpected error occurred.",
+            },
+            null
+        );
+    }
+};
+
 
 export const deleteChatApi = async(
     userId:string,
