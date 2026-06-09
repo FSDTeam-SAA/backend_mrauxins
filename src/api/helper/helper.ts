@@ -418,6 +418,7 @@ export const saveDeviceToken = async (
     token: string,
     deviceType: string
 ) => {
+    if (!token || token.trim() === '') return null;
     try {
     // Check if this user already has the same device token stored
     const existingToken = await deviceToken.findOne({ userId, deviceToken: token });

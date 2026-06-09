@@ -31,13 +31,6 @@ export const verifyOtp = async (req: Request, res: Response) => {
         });
     }
 
-    if (!fcmToken) {
-        return res.status(400).json({
-            code: "MISSING_FIELDS",
-            message: "fcmToken is required.",
-        });
-    }
-
     // Build the query dynamically based on available fields
     const query: any = {};
     
