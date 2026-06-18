@@ -3382,6 +3382,7 @@ export const getGroupInfoLogic = async (
             createdBy: group.createdBy,
             type: group.type,
             participants: group.hideMembersInfo && !isAdmin ? [] : participants,
+            participantCount: participants.length,
             admins: group.hideMembersInfo && !isAdmin ? [] : admins,
             lastMessage: group.lastMessage,
             isProfilePhoto: group.isProfilePhoto,
@@ -3391,6 +3392,7 @@ export const getGroupInfoLogic = async (
             hideMembersInfo: group.hideMembersInfo,
             hideNewMembersMessage: group.hideNewMembersMessage,
             restrictContentSharing: group.restrictContentSharing,
+            isGroupProfilePhoto: group.isGroupProfilePhoto ?? true,
             isAdmin, // Whether the current user is an admin
         };
 
@@ -3582,7 +3584,7 @@ export const updateGroupInfoLogic = async (
     files: any,
     callback: (error: any, result: any) => void
 ) => {
-    const { groupName, isProfilePhoto, isSendMessage, chatType, privacy, hideMembersInfo, hideNewMembersMessage, restrictContentSharing } = reqBody;
+    const { groupName, isProfilePhoto, isSendMessage, chatType, privacy, hideMembersInfo, hideNewMembersMessage, restrictContentSharing, isGroupProfilePhoto } = reqBody;
     try {
         // Find the group chat (Now uses `ChatType.GROUP` instead of `isGroup`)
         const chat = await chatSchema.findOne({ _id: chatId, type: chatType });
@@ -3625,6 +3627,7 @@ export const updateGroupInfoLogic = async (
         if (hideMembersInfo !== undefined) chat.hideMembersInfo = toBoolean(hideMembersInfo, chat.hideMembersInfo);
         if (hideNewMembersMessage !== undefined) chat.hideNewMembersMessage = toBoolean(hideNewMembersMessage, chat.hideNewMembersMessage);
         if (restrictContentSharing !== undefined) chat.restrictContentSharing = toBoolean(restrictContentSharing, chat.restrictContentSharing);
+        if (isGroupProfilePhoto !== undefined) chat.isGroupProfilePhoto = toBoolean(isGroupProfilePhoto, chat.isGroupProfilePhoto);
         
         // ✅ Handle group profile picture update
         if (files && files.length > 0) {
@@ -3632,6 +3635,26 @@ export const updateGroupInfoLogic = async (
         }
 
         await chat.save();
+
+        // Broadcast isSendMessage changes to all group participants in real-time
+        if (isSendMessage !== undefined) {
+            const io = getIo();
+            const participants = await chatParticipantSchema.find({
+                chatId: chat._id,
+                isRemoved: false,
+            });
+            for (const participant of participants) {
+                const participantId = participant.userId.toString();
+                if (participantId === userId) continue;
+                const socketId = userSocketMap[participantId];
+                if (socketId) {
+                    io.to(socketId).emit("group_send_permission_updated", {
+                        chatId: chat._id,
+                        isSendMessage: chat.isSendMessage,
+                    });
+                }
+            }
+        }
 
         return callback(null, chat);
     } catch (error) {

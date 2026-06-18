@@ -540,6 +540,7 @@ export const getAllUsersLogic = async (
     loggedInUserId: string | undefined,
     pagination: { page: number; limit: number },
     searchQuery: string | undefined,
+    requestContactNumbers: string[],
     callback: (error: any, result: any) => void
 ) => {
     try {
@@ -563,64 +564,53 @@ export const getAllUsersLogic = async (
         }
 
         const normalizePhoneNumber = (phone: string) => phone.replace(/\D/g, "");
-        const normalizedContacts = currentUser.contacts?.map(normalizePhoneNumber) || [];
+        const storedContacts = currentUser.contacts?.map(normalizePhoneNumber) || [];
+        // Prefer contact numbers sent by the client (fresh from device); fall back to MongoDB stored list
+        const normalizedContacts = requestContactNumbers.length > 0
+            ? requestContactNumbers.map(normalizePhoneNumber)
+            : storedContacts;
+
         const escapeRegex = (text: string) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
         let escapedSearchQuery = searchQuery ? escapeRegex(searchQuery) : "";
 
-        // Fetch users with whom the logged-in user has chatted
-        // **Fetch cha participants where the logged-in user is part of chat **
-        const chatParticipants = await chatSchema.aggregate([
-            {$match:{participants: new mongoose.Types.ObjectId(loggedInUserId), isFirstMessage: 1} },
-            {
-                $lookup: {
-                    from: "chatparticipants", // Make sure this matches your actual collection name
-                    localField: "participants",
-                    foreignField: "userId",
-                    as: "chatParticipants"
-                }
-            },
-            {
-                $unwind: "$chatParticipants"
-            },
-            {
-                $match: {
-                    "chatParticipants.isRemoved": false, // Filter out removed users
-                    "chatParticipants.isDeleted": {$ne : true}, // Ensure deleted chats are excluded
-                    "chatParticipants.userId": { $ne: new mongoose.Types.ObjectId(loggedInUserId) } // Exclude the logged-in user
-                }
-            },
-            {
-                $group: {
-                    _id: "$chatParticipants.userId"
-                }
-            }
-        ]).then((chats) => chats.map((chat) => new mongoose.Types.ObjectId(chat._id)));
+        let matchCondition: any;
 
-
-        // Default condition: Only contacts and chat users
-        let matchCondition: any = {
-            _id: { $ne: new mongoose.Types.ObjectId(loggedInUserId) },
-            $or: [
-                { phone: { $in: normalizedContacts } }, // Contacts
-                { _id: { $in: chatParticipants } } // Users with whom the user has chatted
-            ],
-            isVerified: true,
-            isProfileSetUp: true
-        };
-
-        // If search query exists, include public profiles in the search
         if (searchQuery) {
-            matchCondition.$or.push({ profilePrivacy: "public" });
-            matchCondition.$and = [
-                {
+            // Search mode: include contacts, chat participants, and public profiles
+            const chatParticipants = await chatSchema.aggregate([
+                { $match: { participants: new mongoose.Types.ObjectId(loggedInUserId), isFirstMessage: 1 } },
+                { $lookup: { from: "chatparticipants", localField: "participants", foreignField: "userId", as: "chatParticipants" } },
+                { $unwind: "$chatParticipants" },
+                { $match: { "chatParticipants.isRemoved": false, "chatParticipants.isDeleted": { $ne: true }, "chatParticipants.userId": { $ne: new mongoose.Types.ObjectId(loggedInUserId) } } },
+                { $group: { _id: "$chatParticipants.userId" } }
+            ]).then((chats) => chats.map((chat) => new mongoose.Types.ObjectId(chat._id)));
+
+            matchCondition = {
+                _id: { $ne: new mongoose.Types.ObjectId(loggedInUserId) },
+                $or: [
+                    { phone: { $in: normalizedContacts } },
+                    { _id: { $in: chatParticipants } },
+                    { profilePrivacy: "public" }
+                ],
+                isVerified: true,
+                isProfileSetUp: true,
+                $and: [{
                     $or: [
                         { userName: { $regex: escapedSearchQuery, $options: "i" } },
                         { name: { $regex: escapedSearchQuery, $options: "i" } },
                         { phone: { $regex: escapedSearchQuery, $options: "i" } },
                         { email: { $regex: escapedSearchQuery, $options: "i" } }
                     ]
-                }
-            ];
+                }]
+            };
+        } else {
+            // Contacts tab: ONLY return users whose phone matches device contacts — no chat participants
+            matchCondition = {
+                _id: { $ne: new mongoose.Types.ObjectId(loggedInUserId) },
+                phone: { $in: normalizedContacts },
+                isVerified: true,
+                isProfileSetUp: true
+            };
         }
 
         // Build aggregation pipeline

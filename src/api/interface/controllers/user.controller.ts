@@ -58,7 +58,7 @@ export const updateUserProfile = async (req: Request, res: Response) => {
 };
 
 export const getAllUsers = async(req: Request, res: Response) => {
-    const { page = 1, limit = 10, search,contactNumbers} = req.query;
+    const { page = 1, limit = 10, search, contactNumbers } = req.query;
     const pagination = {
         page : parseInt(page as string, 10),
         limit: parseInt(limit as string, 10)
@@ -66,11 +66,16 @@ export const getAllUsers = async(req: Request, res: Response) => {
 
     const loggedInUserId = req.user.userId;
 
+    let parsedContactNumbers: string[] = [];
+    if (contactNumbers) {
+        try { parsedContactNumbers = JSON.parse(contactNumbers as string); } catch {}
+    }
+
     getAllUsersLogic(
-        loggedInUserId, 
-        pagination, 
+        loggedInUserId,
+        pagination,
         search as string,
-        // contactNumbers as string, 
+        parsedContactNumbers,
     (error:any, result:any) => {
         if(error){
             return res.status(error.status).json({

@@ -21,6 +21,7 @@ interface IChat extends Document {
     hideMembersInfo: boolean;
     hideNewMembersMessage: boolean;
     restrictContentSharing: boolean;
+    isGroupProfilePhoto: boolean;
     createdBy: mongoose.Types.ObjectId;
 
     // channel fields
@@ -59,6 +60,7 @@ const Chat = new Schema<IChat>({
     hideMembersInfo:{type: Boolean, default: false},
     hideNewMembersMessage:{type: Boolean, default: false},
     restrictContentSharing:{type: Boolean, default: false},
+    isGroupProfilePhoto:{type: Boolean, default: true},
     lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
     createdAt: { type: Date, required: true, default: Date.now },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
