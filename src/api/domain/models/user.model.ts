@@ -746,17 +746,7 @@ export const getAllUsersLogic = async (
 
         const updatedUsers = await fetchNickname(users, loggedInUserId)
 
-        // Count total users matching criteria
-        const totalUsers = await userSchema.countDocuments({
-            // @ts-ignore
-            $or: [
-                { phone: { $in: normalizedContacts } },
-                { _id: { $in: chatParticipants } },
-                searchQuery ? { profilePrivacy: "public" } : null
-            ].filter(Boolean), // Remove null values
-            isVerified: true,
-            isProfileSetUp: true
-        });
+        const totalUsers = await userSchema.countDocuments(matchCondition);
 
         return callback(null, { users: updatedUsers, totalUsers });
     } catch (error) {
