@@ -1,6 +1,6 @@
 import {Request, Response} from "express"
 import { successCreated, successResponse } from "../../helper/apiResponse"
-import { addMembersLogic, assignAdminLogic, createGroupLogic, deleteGroupLogic, getGroupInfoLogic, groupConversationsLogic, leaveGroupLogic, removeMemberLogic, revokeGroupInviteLinkLogic, updateGroupInfoLogic } from "../../domain/services/chat.service";
+import { addMembersLogic, assignAdminLogic, createGroupLogic, deleteGroupLogic, getGroupInfoLogic, groupConversationsLogic, joinGroupByInviteLogic, leaveGroupLogic, removeMemberLogic, revokeGroupInviteLinkLogic, updateGroupInfoLogic } from "../../domain/services/chat.service";
 
 
 // create a New group Api
@@ -264,4 +264,138 @@ export const revokeGroupInviteLink = async(req: Request, res: Response) => {
         }
         return successResponse(res, "Invite link revoked successfully.", result)
     })
+}
+
+export const joinGroupByInvite = async (req: Request, res: Response) => {
+    const userId = req.user.userId;
+    const { chatId } = req.params;
+    const { inviteLink } = req.body;
+
+    joinGroupByInviteLogic(chatId, inviteLink || "", userId, (error: any, result: any) => {
+        if (error) {
+            return res.status(error.status).json({
+                status: error?.status,
+                code: error?.code,
+                message: error?.message,
+            });
+        }
+        return successResponse(res, "Joined successfully.", result);
+    });
+}
+
+export const searchPublicGroups = async (req: Request, res: Response) => {
+    const { search = "", page = 1, limit = 20 } = req.query;
+    const userId = req.user.userId;
+
+    try {
+        const skip = (Number(page) - 1) * Number(limit);
+        const query: any = {
+            privacy: "public",
+            type: { $in: ["group", "channel"] },
+        };
+        if (search) {
+            const escaped = (search as string).replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+            query.groupName = { $regex: `^${escaped}`, $options: "i" };
+        }
+
+        const { default: chatSchema } = await import("../../domain/schema/chat.schema");
+        const results = await chatSchema.find(query)
+            .select("_id groupName groupImage type privacy participants inviteLink")
+            .sort({ groupName: 1 })
+            .skip(skip)
+            .limit(Number(limit))
+            .lean();
+
+        const mapped = results.map((g: any) => ({
+            _id: g._id,
+            groupName: g.groupName,
+            groupImage: g.groupImage,
+            type: g.type,
+            privacy: g.privacy,
+            memberCount: g.participants?.length ?? 0,
+            isMember: g.participants?.some((p: any) => p.toString() === userId) ?? false,
+        }));
+
+        return successResponse(res, "Public groups fetched.", mapped);
+    } catch (error: any) {
+        return res.status(500).json({ status: 500, message: error.message });
+    }
+}
+
+export const searchDatabase = async (req: Request, res: Response) => {
+    const { search = "", page = 1, limit = 50 } = req.query;
+    const userId = req.user.userId;
+
+    try {
+        const skip = (Number(page) - 1) * Number(limit);
+        const escaped = (search as string).replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+        const results: any[] = [];
+
+        // Search public users
+        const { default: userSchema } = await import("../../domain/schema/user.schema");
+        const userQuery: any = {
+            _id: { $ne: userId },
+            profilePrivacy: "public",
+            isVerified: true,
+            isProfileSetUp: true,
+        };
+        if (search) {
+            userQuery.$or = [
+                { userName: { $regex: `^${escaped}`, $options: "i" } },
+                { name: { $regex: `^${escaped}`, $options: "i" } },
+            ];
+        }
+        const users = await userSchema.find(userQuery)
+            .select("_id name userName profilePicture lastSeen isOnline")
+            .sort({ name: 1 })
+            .skip(skip)
+            .limit(Number(limit))
+            .lean();
+
+        for (const u of users) {
+            results.push({
+                _id: u._id,
+                name: u.name,
+                userName: u.userName,
+                profilePicture: u.profilePicture,
+                lastSeen: u.lastSeen,
+                isOnline: u.isOnline,
+                resultType: "user",
+            });
+        }
+
+        // Search public groups & channels
+        const { default: chatSchema } = await import("../../domain/schema/chat.schema");
+        const groupQuery: any = {
+            privacy: "public",
+            type: { $in: ["group", "channel"] },
+        };
+        if (search) {
+            groupQuery.groupName = { $regex: `^${escaped}`, $options: "i" };
+        }
+        const groups = await chatSchema.find(groupQuery)
+            .select("_id groupName groupImage type privacy participants")
+            .sort({ groupName: 1 })
+            .skip(skip)
+            .limit(Number(limit))
+            .lean();
+
+        for (const g of groups) {
+            results.push({
+                _id: g._id,
+                name: g.groupName,
+                groupImage: g.groupImage,
+                type: g.type,
+                memberCount: g.participants?.length ?? 0,
+                isMember: g.participants?.some((p: any) => p.toString() === userId) ?? false,
+                resultType: g.type,
+            });
+        }
+
+        results.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+
+        return successResponse(res, "Database search results.", results);
+    } catch (error: any) {
+        return res.status(500).json({ status: 500, message: error.message });
+    }
 }

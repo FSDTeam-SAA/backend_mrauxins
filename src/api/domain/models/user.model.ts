@@ -596,10 +596,10 @@ export const getAllUsersLogic = async (
                 isProfileSetUp: true,
                 $and: [{
                     $or: [
-                        { userName: { $regex: escapedSearchQuery, $options: "i" } },
-                        { name: { $regex: escapedSearchQuery, $options: "i" } },
-                        { phone: { $regex: escapedSearchQuery, $options: "i" } },
-                        { email: { $regex: escapedSearchQuery, $options: "i" } }
+                        { userName: { $regex: `^${escapedSearchQuery}`, $options: "i" } },
+                        { name: { $regex: `^${escapedSearchQuery}`, $options: "i" } },
+                        { phone: { $regex: `^${escapedSearchQuery}`, $options: "i" } },
+                        { email: { $regex: `^${escapedSearchQuery}`, $options: "i" } }
                     ]
                 }]
             };

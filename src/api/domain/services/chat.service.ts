@@ -12,6 +12,7 @@ export {
     getGroupInfoLogic,
     getMessagesOfChatIDLogic,
     groupConversationsLogic,
+    joinGroupByInviteLogic,
     leaveGroupLogic,
     removeMemberLogic,
     revokeGroupInviteLinkLogic,
