@@ -1,6 +1,7 @@
 export {
     addMembersLogic,
     assignAdminLogic,
+    checkInviteNameLogic,
     clearAllChatLogic,
     createGroupLogic,
     createNewChatLogic,

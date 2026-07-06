@@ -3733,6 +3733,24 @@ export const revokeGroupInviteLinkLogic = async (
 };
 
 
+export const checkInviteNameLogic = async (
+    name: string,
+    excludeChatId: string,
+    callback: (error: any, result: any) => void
+) => {
+    try {
+        const escapedName = name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+        const query: any = { inviteLink: new RegExp(`\\/${escapedName}$`) };
+        if (excludeChatId) {
+            try { query._id = { $ne: new mongoose.Types.ObjectId(excludeChatId) }; } catch (_) { /* ignore bad id */ }
+        }
+        const existing = await chatSchema.findOne(query).select('_id').lean();
+        return callback(null, { available: !existing });
+    } catch (error) {
+        return callback({ status: 500, code: "INTERNAL_SERVER_ERROR", message: "An error occurred." }, null);
+    }
+};
+
 export const joinGroupByInviteLogic = async (
     chatId: string,
     inviteLink: string,
