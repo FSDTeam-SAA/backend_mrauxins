@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="x-apple-disable-message-reformatting"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="color-scheme" content="light"/>
+    <meta name="supported-color-schemes" content="light dark"/>
+    <title>Your OTP Code</title>
+</head>
+<body style="margin: 0; line-height: inherit; font-family: sans-serif;">
+<div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center">
+    <section
+            style="margin-right: auto; margin-left: auto; width: 100%; max-width: 32rem; border-radius: 0.25rem; background: #111827; padding: 2rem 1.5rem;">
+        <header style="display: flex; width: 100%; align-items: center; justify-content: center;">
+            <span style="display: block; vertical-align: middle; max-width: 100%; font-size: 2rem; font-family: Figtree, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji; color: #FFFFFF;">
+                212<span style="font-size: larger; font-weight: 500;">Messenger</span>
+            </span>
+        </header>
+
+        <main style="margin-top: 2rem; width: 100%; display: flex; flex-direction: column; gap: 1rem; justify-content: space-between; align-items: start;">
+
+            <h2 style="font-size: inherit; font-weight: inherit; color: #E5E7EB;">
+                Hii there,
+            </h2>
+
+            <div style="line-height: 2; color: #D1D5DB;">
+                Use the code below to verify your <span style="font-weight: 500; color: #A7F3D0">{{ APP_NAME }}</span> account.
+            </div>
+
+            <div style="display: flex; width: 100%; align-items: center; justify-content: center; margin-top: 0.5rem;">
+                <span style="border-radius: 0.5rem; background: #1F2937; padding: 0.75rem 1.5rem; font-size: 2rem; font-weight: 600; letter-spacing: 0.5rem; color: #FFFFFF; font-family: monospace;">
+                    {{ otp }}
+                </span>
+            </div>
+
+            <div style="display: flex; width: 100%; align-items: center; justify-content: center; color: #9CA3AF;">
+                This code expires in {{ expiryMinutes }} minutes.
+            </div>
+
+            <div style="display: flex; width: 100%; align-items: center; justify-content: start; color: #9CA3AF;">
+                If you didn't request this code, you can safely ignore this email.
+            </div>
+
+            <p style="color: #D1D5DB;">
+                Thanks,<br/>
+                {{ APP_NAME }} Team
+            </p>
+        </main>
+
+        <footer style="margin-top: 2rem;">
+            <p style="margin: 0; color: #9CA3AF;">
+                This email was sent to <span style="color: #efb693; text-decoration: inherit;">{{ email }}</span>.
+            </p>
+
+            <p style="margin: 0.75rem 0 0; color: #9CA3AF;">
+                &copy;{{ current_year }} {{ APP_NAME }}. All Rights Reserved.
+            </p>
+        </footer>
+    </section>
+</div>
+</body>
+</html>

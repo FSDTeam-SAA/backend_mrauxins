@@ -1,6 +1,7 @@
 
 import nodemailer from "nodemailer";
 import { env } from "../../infrastructure/env";
+import { renderEmailTemplate } from "../utils/emailTemplate";
 
 const smtpPort = Number(env.SMTP_PORT || 587);
 
@@ -46,19 +47,25 @@ const sendEmail = async(to:string, subject:string, text:string, html:string)=>{
     }
 }
 
-export const sentOtpService = async(email:string,otp:string) => {    
+export const sentOtpService = async(email:string,otp:string) => {
+    const expiryMinutes = 10;
 
-    // Send OTP email
     try {
-        // here is call otp sent function
-        // Example usage
+        const html = renderEmailTemplate('otpEmail', {
+            otp,
+            expiryMinutes,
+            APP_NAME: '212 Messenger',
+            current_year: new Date().getFullYear(),
+            email
+        });
+
         await sendEmail(
             email, // Receiver's email address
             'Welcome to Our 212 Messenger App.',     // Subject
-            `Your 212 Messenger OTP is ${otp}`, // Text content
-            `<h1>OTP, ${otp}</h1>` // HTML content
+            `Your 212 Messenger OTP is ${otp}. It expires in ${expiryMinutes} minutes.`, // Text content
+            html // HTML content
         );
-        
+
         return {message : "OTP sent successfully."}
     } catch (error) {
         console.error("Error sending email",error);
