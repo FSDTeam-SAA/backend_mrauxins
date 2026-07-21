@@ -14,6 +14,7 @@ import { TenantAwareAuth } from "firebase-admin/lib/auth/tenant-manager";
 import {v4 as uuidv4} from "uuid"
 import { CLICK_NOTIFICATION_TYPE, NotificationType } from "../schema/notification.schema";
 import { env } from "../../../infrastructure/env";
+import { buildGroupInfoPayload, buildSenderPayload } from "../../helper/notificationPayload";
 
 interface SendMessageData {
     chatId: string;
@@ -360,14 +361,10 @@ export const sendMessageLogic = async (
                             click_action: CLICK_NOTIFICATION_TYPE,
                             type: NotificationType.CHAT_MESSAGE,
                             chat_id: chatId,
-                            sender: JSON.stringify({
-                                isActiveNickname: matched?.isActiveNickname,
-                                nickName: matched?.nickName,
-                                ...senderDetails
-                            }),
+                            sender: JSON.stringify(buildSenderPayload(senderDetails)),
                             temp_message_id: tempMessageId,
                             content,
-                            groupInfo:JSON.stringify(chat),
+                            groupInfo:JSON.stringify(buildGroupInfoPayload(chat)),
                             chatType:chat.type === ChatType.ONE_TO_ONE 
                                 ? ChatType.ONE_TO_ONE : chat.type === ChatType.GROUP 
                                 ? ChatType.GROUP : ChatType.CHANNEL,
@@ -2347,7 +2344,7 @@ export const createGroupLogic = async (
         const title = chatType === ChatType.GROUP ? "New Group Invitation" : "New Channel Invitation";
         const body = `You were added to "${groupName}"`;
 
-        for (const user of parsedParticipants) {
+        await Promise.all(parsedParticipants.map(async (user: string) => {
             const receiverDetails = await userSchema.findById(user);
             if (!receiverDetails?.isStopNotification) {
                 const notificationPayload = {
@@ -2355,10 +2352,10 @@ export const createGroupLogic = async (
                     body,
                     chat_id: chatId,
                     click_action: CLICK_NOTIFICATION_TYPE,
-                    sender: JSON.stringify(groupCreator),
+                    sender: JSON.stringify(buildSenderPayload(groupCreator)),
                     type: chatType === ChatType.GROUP ? NotificationType.NEW_GROUP_CREATED : NotificationType.CREATE_NEW_CHANNEL,
                     content: `You were added to "${groupName}"`,
-                    groupInfo: JSON.stringify(result),
+                    groupInfo: JSON.stringify(buildGroupInfoPayload(result)),
                     senderId: creatorId,
                     receiverId: user.toString(),
                     isMuteNotification: receiverDetails?.isMuteNotification
@@ -2366,7 +2363,7 @@ export const createGroupLogic = async (
                 await sentPushNotificationToUser(user.toString(), notificationPayload);
                 loggerMsg("New group created push sent successfully", "debug");
             }
-        }
+        }));
 
         const chatParticipantsData = newChat.participants.map(participant => ({
             chatId: newChat._id,
@@ -2577,10 +2574,10 @@ const sendNotificationsAndEmitEvents = async (chat: any, loggedinUser: any, io: 
             body: `${loggedinUser.name || "Admin"} added you to this ${typeName}`,
             chat_id: chat._id.toString(),
             click_action: CLICK_NOTIFICATION_TYPE,
-            sender: JSON.stringify(loggedinUser),
+            sender: JSON.stringify(buildSenderPayload(loggedinUser)),
             type: notifType,
             content: `${loggedinUser.name || "Admin"} added you to "${chat.groupName}"`,
-            groupInfo: JSON.stringify(chat),
+            groupInfo: JSON.stringify(buildGroupInfoPayload(chat)),
             senderId: adminId,
             receiverId: memberId,
             isMuteNotification: user.isMuteNotification,
@@ -2812,10 +2809,10 @@ export const assignAdminLogic = async (
                 body: actionMessage,
                 chat_id: chatId.toString(),
                 click_action: CLICK_NOTIFICATION_TYPE,
-                sender: JSON.stringify(loggedinUser),
+                sender: JSON.stringify(buildSenderPayload(loggedinUser)),
                 type: NotificationType.ASSIGN_ADMIN,
                 content: actionMessage,
-                groupInfo: JSON.stringify(chat),
+                groupInfo: JSON.stringify(buildGroupInfoPayload(chat)),
                 senderId: loggedInUserId,
                 receiverId: userId.toString(),
                 isMuteNotification: receiverUser.isMuteNotification,
@@ -2991,12 +2988,12 @@ export const leaveGroupLogic = async (
                         body,
                         chat_id: String(group._id),
                         click_action: CLICK_NOTIFICATION_TYPE,
-                        sender: JSON.stringify(leaveUserDetails),
+                        sender: JSON.stringify(buildSenderPayload(leaveUserDetails)),
                         type: ChatType.GROUP === group.type ? NotificationType.LEAVE_GROUP : NotificationType.LEAVE_CHANNEL,
                         content: `${leaveUserDetails?.name} left the group "${group.groupName}".`,
                         groupImage:`${group.groupImage}`,
                         groupName:`${group.groupName}`,
-                        groupInfo: JSON.stringify(group),
+                        groupInfo: JSON.stringify(buildGroupInfoPayload(group)),
                         senderId: userId.toString(),
                         receiverId: participant.userId.toString(),
                         isMuteNotification: receiverDetails?.isMuteNotification,
@@ -3226,9 +3223,9 @@ export const removeMemberLogic = async (
                 click_action: CLICK_NOTIFICATION_TYPE,
                 type: ChatType.GROUP === group.type ? NotificationType.REMOVE_MEMBER_GROUP : NotificationType.REMOVE_MEMBER_CHANNEL,
                 chat_id: chatId.toString(),
-                sender: JSON.stringify(removerUser),
+                sender: JSON.stringify(buildSenderPayload(removerUser)),
                 content: `You are removed from \"${group.groupName}\"`,
-                groupInfo: JSON.stringify(group),
+                groupInfo: JSON.stringify(buildGroupInfoPayload(group)),
                 senderId: userId.toString(),
                 receiverId: memberId.toString(),
                 isMuteNotification: receiverDetails?.isMuteNotification,
@@ -3261,10 +3258,10 @@ export const removeMemberLogic = async (
                         body: `${removerUser?.name} removed ${removedMember?.name} from "${group.groupName}".`,
                         chat_id: chatId.toString(),
                         click_action: CLICK_NOTIFICATION_TYPE,
-                        sender: JSON.stringify(removerUser),
+                        sender: JSON.stringify(buildSenderPayload(removerUser)),
                         type: ChatType.GROUP === group.type ? NotificationType.REMOVE_MEMBER_GROUP : NotificationType.REMOVE_MEMBER_CHANNEL,
                         content: `${removerUser?.name} removed ${removedMember?.name} from "${group.groupName}".`,
-                        groupInfo: JSON.stringify(group),
+                        groupInfo: JSON.stringify(buildGroupInfoPayload(group)),
                         senderId: userId.toString(),
                         receiverId: participant.userId.toString(),
                         isMuteNotification: receiverDetails?.isMuteNotification,

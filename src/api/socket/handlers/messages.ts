@@ -11,6 +11,7 @@ import chatParticipantSchema from '../../domain/schema/chat.participant.schema';
 import { saveMediaMessageAsync } from '../../domain/models/chat.model';
 import { descryptedContent } from '../../helper/helper';
 import { userSocketMap, receiverOpenChat, getNickNameDetails } from '../initDemoSocketHandlers';
+import { buildGroupInfoPayload, buildSenderPayload } from '../../helper/notificationPayload';
 
 interface SendMessageData {
   chatId: string;
@@ -269,14 +270,10 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
                     click_action: CLICK_NOTIFICATION_TYPE,
                     type: NotificationType.CHAT_MESSAGE,
                     chat_id: chatId,
-                    sender: JSON.stringify({
-                      isActiveNickname: matched?.isActiveNickname,
-                      nickName: matched?.nickName,
-                      ...senderDetails
-                    }),
+                    sender: JSON.stringify(buildSenderPayload(senderDetails)),
                     temp_message_id: tempMessageId,
                     content,
-                    groupInfo: JSON.stringify(chat),
+                    groupInfo: JSON.stringify(buildGroupInfoPayload(chat)),
                     chatType: chatType === ChatType.ONE_TO_ONE ? ChatType.ONE_TO_ONE : ChatType.GROUP,
                     receiverId: participant.toString(),
                     senderId: sender.toString(),
@@ -289,7 +286,7 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
                     await sentPushNotificationToUser(participant.toString(), notificationPayload);
                     loggerMsg(`Push notification sent successfully!`, "debug");
                   } catch (error) {
-                    console.error("Failed to push notification to send_message", error);
+                    loggerMsg(`Failed to push notification to send_message: ${error instanceof Error ? error.message : error}`, "error");
                   }
                 }
               }
@@ -352,10 +349,10 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
                     click_action: CLICK_NOTIFICATION_TYPE,
                     type: NotificationType.CHAT_MESSAGE,
                     chat_id: chatId,
-                    sender: JSON.stringify(senderDetails),
+                    sender: JSON.stringify(buildSenderPayload(senderDetails)),
                     temp_message_id: tempMessageId,
                     content,
-                    groupInfo: JSON.stringify(chat),
+                    groupInfo: JSON.stringify(buildGroupInfoPayload(chat)),
                     chatType: ChatType.CHANNEL,
                     receiverId: participant.toString(),
                     senderId: sender.toString(),
@@ -573,10 +570,10 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
           click_action: CLICK_NOTIFICATION_TYPE,
           type: NotificationType.CHAT_MESSAGE,
           chat_id: chatId,
-          sender: JSON.stringify(senderDetails),
+          sender: JSON.stringify(buildSenderPayload(senderDetails)),
           temp_message_id: messageId,
           content: JSON.stringify(reactions),
-          groupInfo: JSON.stringify(chat),
+          groupInfo: JSON.stringify(buildGroupInfoPayload(chat)),
           chatType: chat.type === ChatType.ONE_TO_ONE ? ChatType.ONE_TO_ONE : ChatType.GROUP,
           receiverId: message.sender.toString(),
           senderId: userId.toString(),
@@ -588,7 +585,7 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
           await sentPushNotificationToUser(message.sender.toString(), notificationPayload);
           loggerMsg(`Push notification sent successfully!`, "debug");
         } catch (error) {
-          console.error("Failed to push notification to send_message", error);
+          loggerMsg(`Failed to push notification to send_message: ${error instanceof Error ? error.message : error}`, "error");
         }
       }
     } catch (error) {

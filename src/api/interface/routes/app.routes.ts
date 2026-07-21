@@ -1,5 +1,5 @@
 import express from "express";
-import { protectedRoute} from "../../middleware/auth.middleware";
+import { protectedRoute, optionalAuth} from "../../middleware/auth.middleware";
 import { validateRequest } from "../../middleware/validation.middleware";
 import { generateAgoraToken, getAgoraAppId, sentOtp, verifyOtp } from "../controllers/auth.controller";
 import { sendOtpValidationSchema, verifyOtpValidationSchema } from "../../utils/validation-schems/user.validation";
@@ -195,9 +195,9 @@ export const appRoute = (router: express.Router): void => {
 
         /** ++++++++++++++++++++++++++ DeviceToken Api ++++++++++++++++++++++++++++++ */
         route.delete("/delete-token", protectedRoute, deleteDeviceToken)
-        route.post("/replace-token", replaceToken);
+        route.post("/replace-token", optionalAuth, replaceToken);
          /** ++++++++++++++++++++++++++ Push Notification Api ++++++++++++++++++++++++++++++ */
-         route.post("/push", saveDeviceTokenApi)
+         route.post("/push", optionalAuth, saveDeviceTokenApi)
 
          route.get("/refresh-token", protectedRoute, newRefreshToken)
          route.get("/privacy-policy", (req, res) => {

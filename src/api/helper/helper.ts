@@ -420,21 +420,16 @@ export const saveDeviceToken = async (
 ) => {
     if (!token || token.trim() === '') return null;
     try {
-    // Check if this user already has the same device token stored
-    const existingToken = await deviceToken.findOne({ userId, deviceToken: token });
-
-    if (!existingToken) {
-        // Save new token even if the same token exists for other users
-        const newToken = new deviceToken({
-            userId,
-            deviceToken: token,
-            deviceType,
-        });
-
-        return await newToken.save();
-    }
-
-    return existingToken;
+    // Match on the physical device token alone (not {userId, token}), so a
+    // token that's already registered to a different account (previous
+    // login on a shared/reused device, or a reinstall) is reassigned to the
+    // current user instead of piling up as a second row for the same
+    // physical device.
+    return await deviceToken.findOneAndUpdate(
+        { deviceToken: token },
+        { userId, deviceToken: token, deviceType },
+        { upsert: true, new: true }
+    );
     } catch (error:any) {
         if (error instanceof mongoose.Error.ValidationError) {
             throw {

@@ -21,6 +21,7 @@ import crypto from "crypto";
 import chatParticipantSchema from "../schema/chat.participant.schema";
 import { Story } from "../schema/stories.schema";
 import { formatUserResponse, IUserResponse } from "../dto/user.dto";
+import { buildSenderPayload } from "../../helper/notificationPayload";
 
 interface userData{
     email: string; 
@@ -1097,7 +1098,7 @@ export const generateAgoraTokenLogic = async (
                         click_action: CLICK_NOTIFICATION_TYPE,
                         type:NotificationType.AGORA_CALL_INVITATION,
                         chat_id: chatId,
-                        sender: JSON.stringify(senderWithNickname),
+                        sender: JSON.stringify(buildSenderPayload(senderWithNickname)),
                         channel_name: channelName,
                         token,
                         call_type:
@@ -1117,7 +1118,6 @@ export const generateAgoraTokenLogic = async (
                         isInComeingCall:isInComeingCall,
                         isMuteNotification: false
                     };
-console.log("notificationPayload........",notificationPayload)
                     await sentPushNotificationToUser(participantId.toString(), notificationPayload);
                     
                     loggerMsg("Push notification sent successfully", "debug");
