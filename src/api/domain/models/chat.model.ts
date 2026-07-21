@@ -1009,11 +1009,19 @@ export const getConversationsLogic = async (
                     createdAt: 1,
                     updatedAt: 1,
                     privacy:1,
+<<<<<<< HEAD
                     inviteLink:1,
                     hideMembersInfo:1,
                     hideNewMembersMessage:1,
                     restrictContentSharing:1,
                     createdBy: 1,
+=======
+                    inviteLink:1,
+                    hideMembersInfo:1,
+                    hideNewMembersMessage:1,
+                    restrictContentSharing:1,
+                    createdBy: 1,
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
                     encryptedAESKey: 1,
                     isProfilePhoto: 1,
                     isGroupProfilePhoto: 1,
@@ -1347,11 +1355,19 @@ export const getConversationsLogic = async (
                     createdAt: 1,
                     updatedAt: 1,
                     privacy:1,
+<<<<<<< HEAD
                     inviteLink:1,
                     hideMembersInfo:1,
                     hideNewMembersMessage:1,
                     restrictContentSharing:1,
                     createdBy: 1,
+=======
+                    inviteLink:1,
+                    hideMembersInfo:1,
+                    hideNewMembersMessage:1,
+                    restrictContentSharing:1,
+                    createdBy: 1,
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
                     encryptedAESKey: 1,
                     isProfilePhoto: 1,
                     isGroupProfilePhoto: 1,
@@ -1754,11 +1770,19 @@ export const getForwardedConversationsLogic = async (
                     createdAt: 1,
                     updatedAt: 1,
                     privacy:1,
+<<<<<<< HEAD
                     inviteLink:1,
                     hideMembersInfo:1,
                     hideNewMembersMessage:1,
                     restrictContentSharing:1,
                     createdBy: 1,
+=======
+                    inviteLink:1,
+                    hideMembersInfo:1,
+                    hideNewMembersMessage:1,
+                    restrictContentSharing:1,
+                    createdBy: 1,
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
                     encryptedAESKey: 1,
                     isProfilePhoto: 1,
                     isGroupProfilePhoto: 1,
@@ -2274,6 +2298,7 @@ export const clearChatForUser = async (userId: string, chatId: string) => {
     }
 };
 
+<<<<<<< HEAD
 // =========================== Groups =======================================
 
 const toBoolean = (value: any, fallback = false): boolean => {
@@ -2286,13 +2311,31 @@ const toBoolean = (value: any, fallback = false): boolean => {
 const createInviteLink = (chatId: string) => `messenger212://join/${chatId}/${new mongoose.Types.ObjectId().toString()}`;
 
 export const createGroupLogic = async (
+=======
+// =========================== Groups =======================================
+
+const toBoolean = (value: any, fallback = false): boolean => {
+    if (value === undefined || value === null || value === "") return fallback;
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") return value.toLowerCase() === "true";
+    return Boolean(value);
+};
+
+const createInviteLink = (chatId: string) => `the212.me/+${chatId}${new mongoose.Types.ObjectId().toString()}`;
+
+export const createGroupLogic = async (
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
     reqBody: any,
     creatorId: string,
     files: Express.Multer.File[],
     callback: (error: any, result: any) => void
 ) => {
     try {
+<<<<<<< HEAD
         const { chatType, groupName, description, privacy, admins, participants, isProfilePhoto, isSendMessage, hideMembersInfo, hideNewMembersMessage, restrictContentSharing } = reqBody;
+=======
+        const { chatType, groupName, description, privacy, admins, participants, isProfilePhoto, isSendMessage, hideMembersInfo, hideNewMembersMessage, restrictContentSharing } = reqBody;
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
 
         const groupCreator = await userSchema.findById(creatorId).select("_id name userName profilePicture");
 
@@ -2312,6 +2355,7 @@ export const createGroupLogic = async (
             .lean();
 
         const aesKey = generateAESKeys();
+<<<<<<< HEAD
         const newChatId = new mongoose.Types.ObjectId();
         const chatPrivacy = privacy === "private" ? "private" : "public";
         const newChat = new chatSchema({
@@ -2332,6 +2376,28 @@ export const createGroupLogic = async (
             encryptedAESKey: aesKey,
             isFirstMessage:1
         });
+=======
+        const newChatId = new mongoose.Types.ObjectId();
+        const chatPrivacy = privacy === "private" ? "private" : "public";
+        const newChat = new chatSchema({
+            _id: newChatId,
+            type: chatType,
+            groupName,
+            description: chatType === ChatType.CHANNEL ? description : undefined,
+            privacy: chatPrivacy,
+            createdBy: new mongoose.Types.ObjectId(creatorId),
+            admins: adminList.map(id => new mongoose.Types.ObjectId(id)),
+            participants: allParticipants,
+            isProfilePhoto: toBoolean(isProfilePhoto, true),
+            isSendMessage: toBoolean(isSendMessage, chatType === ChatType.GROUP),
+            hideMembersInfo: toBoolean(hideMembersInfo),
+            hideNewMembersMessage: toBoolean(hideNewMembersMessage),
+            restrictContentSharing: toBoolean(restrictContentSharing),
+            inviteLink: createInviteLink(newChatId.toString()),
+            encryptedAESKey: aesKey,
+            isFirstMessage:1
+        });
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
 
         if (files && files.length > 0) {
             // @ts-ignore
@@ -2393,9 +2459,15 @@ export const createGroupLogic = async (
         await messageSchema.create(groupCreatedMessage);
 
         // **Create System Messages for All Participants**
+<<<<<<< HEAD
         const systemMessages = newChat.hideNewMembersMessage ? [] : await Promise.all(parsedParticipants.map(async (userId: any) => {
             const userDetails = await userSchema.findById(userId).select("name").lean();
             return {
+=======
+        const systemMessages = newChat.hideNewMembersMessage ? [] : await Promise.all(parsedParticipants.map(async (userId: any) => {
+            const userDetails = await userSchema.findById(userId).select("name").lean();
+            return {
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
                 chatId,
                 sender: {
                     _id: groupCreator?._id,
@@ -2509,9 +2581,15 @@ export const addMembersLogic = async (
         await chatParticipantSchema.bulkWrite(bulkUpdates);
 
         // Create system messages
+<<<<<<< HEAD
         const systemMessages = chat.hideNewMembersMessage ? [] : allAddedMembers.map(member => ({
             chatId,
             sender: {
+=======
+        const systemMessages = chat.hideNewMembersMessage ? [] : allAddedMembers.map(member => ({
+            chatId,
+            sender: {
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
                 _id: loggedinUser?._id,
                 name: loggedinUser?.name,
                 userName: loggedinUser?.userName,
@@ -2539,9 +2617,15 @@ export const addMembersLogic = async (
                 profilePicture: null
             }
         }));
+<<<<<<< HEAD
         if (systemMessages.length > 0) {
             await messageSchema.insertMany(systemMessages);
         }
+=======
+        if (systemMessages.length > 0) {
+            await messageSchema.insertMany(systemMessages);
+        }
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
 
         // Send notifications and emit socket events to all users
         await sendNotificationsAndEmitEvents(chat, loggedinUser, io, systemMessages, allAddedMembers);
@@ -3381,6 +3465,7 @@ export const getGroupInfoLogic = async (
             createdAt: group.createdAt,
             createdBy: group.createdBy,
             type: group.type,
+<<<<<<< HEAD
             participants: group.hideMembersInfo && !isAdmin ? [] : participants,
             participantCount: participants.length,
             admins: group.hideMembersInfo && !isAdmin ? [] : admins,
@@ -3395,6 +3480,20 @@ export const getGroupInfoLogic = async (
             isGroupProfilePhoto: group.isGroupProfilePhoto ?? true,
             isAdmin, // Whether the current user is an admin
         };
+=======
+            participants: group.hideMembersInfo && !isAdmin ? [] : participants,
+            admins: group.hideMembersInfo && !isAdmin ? [] : admins,
+            lastMessage: group.lastMessage,
+            isProfilePhoto: group.isProfilePhoto,
+            isSendMessage: group.isSendMessage,
+            privacy: group.privacy,
+            inviteLink: group.inviteLink,
+            hideMembersInfo: group.hideMembersInfo,
+            hideNewMembersMessage: group.hideNewMembersMessage,
+            restrictContentSharing: group.restrictContentSharing,
+            isAdmin, // Whether the current user is an admin
+        };
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
 
         return callback(null, groupInfo);
     } catch (error) {
@@ -3584,7 +3683,11 @@ export const updateGroupInfoLogic = async (
     files: any,
     callback: (error: any, result: any) => void
 ) => {
+<<<<<<< HEAD
     const { groupName, isProfilePhoto, isSendMessage, chatType, privacy, hideMembersInfo, hideNewMembersMessage, restrictContentSharing, isGroupProfilePhoto, inviteLink } = reqBody;
+=======
+    const { groupName, isProfilePhoto, isSendMessage, chatType, privacy, hideMembersInfo, hideNewMembersMessage, restrictContentSharing } = reqBody;
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
     try {
         // Find the group chat (Now uses `ChatType.GROUP` instead of `isGroup`)
         const chat = await chatSchema.findOne({ _id: chatId, type: chatType });
@@ -3617,6 +3720,7 @@ export const updateGroupInfoLogic = async (
 
         // ✅ Update allowed fields
         if (groupName !== undefined) chat.groupName = groupName;
+<<<<<<< HEAD
         if (isProfilePhoto !== undefined)
             chat.isProfilePhoto = toBoolean(isProfilePhoto, chat.isProfilePhoto);
         if (isSendMessage !== undefined) chat.isSendMessage = toBoolean(isSendMessage, chat.isSendMessage);
@@ -3630,6 +3734,19 @@ export const updateGroupInfoLogic = async (
         if (isGroupProfilePhoto !== undefined) chat.isGroupProfilePhoto = toBoolean(isGroupProfilePhoto, chat.isGroupProfilePhoto);
         if (inviteLink !== undefined && typeof inviteLink === "string" && inviteLink.length > 0) chat.inviteLink = inviteLink;
 
+=======
+        if (isProfilePhoto !== undefined)
+            chat.isProfilePhoto = toBoolean(isProfilePhoto, chat.isProfilePhoto);
+        if (isSendMessage !== undefined) chat.isSendMessage = toBoolean(isSendMessage, chat.isSendMessage);
+        if (privacy !== undefined) {
+            chat.privacy = privacy === "private" ? "private" : "public";
+            if (!chat.inviteLink) chat.inviteLink = createInviteLink(chat._id.toString());
+        }
+        if (hideMembersInfo !== undefined) chat.hideMembersInfo = toBoolean(hideMembersInfo, chat.hideMembersInfo);
+        if (hideNewMembersMessage !== undefined) chat.hideNewMembersMessage = toBoolean(hideNewMembersMessage, chat.hideNewMembersMessage);
+        if (restrictContentSharing !== undefined) chat.restrictContentSharing = toBoolean(restrictContentSharing, chat.restrictContentSharing);
+        
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
         // ✅ Handle group profile picture update
         if (files && files.length > 0) {
             chat.groupImage = files.map((file:any) => file.key)[0]
@@ -3843,4 +3960,8 @@ export const deleteChatApi = async(
             null
         );
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e

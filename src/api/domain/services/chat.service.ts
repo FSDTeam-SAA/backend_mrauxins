@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 export {
     addMembersLogic,
     assignAdminLogic,
@@ -20,3 +21,24 @@ export {
     sendMessageLogic,
     updateGroupInfoLogic,
 } from "../models/chat.model";
+=======
+export {
+    addMembersLogic,
+    assignAdminLogic,
+    clearAllChatLogic,
+    createGroupLogic,
+    createNewChatLogic,
+    deleteChatApi,
+    deleteGroupLogic,
+    deleteMessageLogic,
+    getConversationsLogic,
+    getForwardedConversationsLogic,
+    getGroupInfoLogic,
+    getMessagesOfChatIDLogic,
+    groupConversationsLogic,
+    leaveGroupLogic,
+    removeMemberLogic,
+    sendMessageLogic,
+    updateGroupInfoLogic,
+} from "../models/chat.model";
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e

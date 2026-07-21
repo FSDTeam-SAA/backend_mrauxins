@@ -161,12 +161,21 @@ export const sentPushNotificationToUser = async (userId: string, {
                  notification: {
                     sound: isMuteNotification ? "" : "default", // mute: no sound, else default sound
                 },
+<<<<<<< HEAD
             },
             apns:{
                 headers: {
                     "apns-priority": "10"
                 },
                 payload: {
+=======
+            },
+            apns:{
+                headers: {
+                    "apns-priority": "10"
+                },
+                payload: {
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
                     aps:{
                         "content-available": 1,
                         // "sound": deviceType === "ios" && isInComeingCall ? "bell_standard_call.caf" : "default",
@@ -205,9 +214,15 @@ export const sentPushNotificationToUser = async (userId: string, {
         // Always send sound for ios incoming calls
         if(deviceType === "ios" && isInComeingCall){
             message.apns.payload.aps["sound"] = "bell_standard_call.caf"
+<<<<<<< HEAD
         }else if(!isMuteNotification){
             message.apns.payload.aps["sound"] = "default"
         }else{
+=======
+        }else if(!isMuteNotification){
+            message.apns.payload.aps["sound"] = "default"
+        }else{
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
             // Explicitly remove the sound key if notifications are muted
             if ("sound" in message.apns.payload.aps) {
                 delete message.apns.payload.aps["sound"];
@@ -350,4 +365,8 @@ export const sentPushNotificationToUser = async (userId: string, {
     } catch (error) {
         loggerMsg(`Error sending notification to user ${userId}: ${error instanceof Error ? error.message : error}`, "error");
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e

@@ -16,12 +16,20 @@ interface IChat extends Document {
     groupImage?: string;
     lastMessage?: mongoose.Types.ObjectId;
     createdAt: Date;
+<<<<<<< HEAD
     isProfilePhoto: boolean,
     isSendMessage:boolean;
     hideMembersInfo: boolean;
     hideNewMembersMessage: boolean;
     restrictContentSharing: boolean;
     isGroupProfilePhoto: boolean;
+=======
+    isProfilePhoto: boolean,
+    isSendMessage:boolean;
+    hideMembersInfo: boolean;
+    hideNewMembersMessage: boolean;
+    restrictContentSharing: boolean;
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
     createdBy: mongoose.Types.ObjectId;
 
     // channel fields
@@ -55,12 +63,20 @@ const Chat = new Schema<IChat>({
     privacy: { type: String, enum: ['public', 'private'] },
     inviteLink: { type: String },
 
+<<<<<<< HEAD
     isProfilePhoto:{type: Boolean, default: true},
     isSendMessage:{type: Boolean, default: true},
     hideMembersInfo:{type: Boolean, default: false},
     hideNewMembersMessage:{type: Boolean, default: false},
     restrictContentSharing:{type: Boolean, default: false},
     isGroupProfilePhoto:{type: Boolean, default: true},
+=======
+    isProfilePhoto:{type: Boolean, default: true},
+    isSendMessage:{type: Boolean, default: true},
+    hideMembersInfo:{type: Boolean, default: false},
+    hideNewMembersMessage:{type: Boolean, default: false},
+    restrictContentSharing:{type: Boolean, default: false},
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
     lastMessage: { type: mongoose.Schema.Types.ObjectId, ref: 'Message' },
     createdAt: { type: Date, required: true, default: Date.now },
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: false },
@@ -78,4 +94,8 @@ const Chat = new Schema<IChat>({
     */
   });
 
+<<<<<<< HEAD
   export default mongoose.model<IChat>('Chat', Chat)
+=======
+  export default mongoose.model<IChat>('Chat', Chat)
+>>>>>>> 7b48091d3b78e08956c41ff475483a5f666a6d2e
