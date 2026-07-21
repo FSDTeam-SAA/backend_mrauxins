@@ -1,10 +1,16 @@
 import {Request, Response} from "express";
 import { successCreated } from "../../helper/apiResponse";
 import { deleteDeviceTokenApiLogic, replaceFcmToken, saveDeviceTokenLogic } from "../../domain/models/device.token.model";
+import { loggerMsg } from "../../lib/logger";
 
 
 export const saveDeviceTokenApi = async(req: Request, res: Response)=>{
-    const {userId, deviceToken, deviceType} = req.body;
+    const {deviceToken, deviceType} = req.body;
+    let userId = req.user?.userId;
+    if(!userId){
+        loggerMsg(`/push called without a valid auth token — falling back to body userId ${req.body.userId}. This fallback is deprecated and will be removed.`, "warn");
+        userId = req.body.userId;
+    }
 
     saveDeviceTokenLogic(userId, deviceToken, deviceType, (error, result) => {
         if(error){
@@ -39,12 +45,16 @@ export const deleteDeviceToken = async(req:Request, res: Response) => {
 }
 
 export const replaceToken = async(req: Request, res: Response) => {
-    // const userId = req.user.userId;
-    const {deviceToken, userId, deviceType} = req.body;
+    const {deviceToken, deviceType} = req.body;
+    let userId = req.user?.userId;
+    if(!userId){
+        loggerMsg(`/replace-token called without a valid auth token — falling back to body userId ${req.body.userId}. This fallback is deprecated and will be removed.`, "warn");
+        userId = req.body.userId;
+    }
 
-    // if(!userId && !deviceToken){
-    //     return res.status(400).json({message: "deviceToken & userId is required."})
-    // }
+    if(!userId || !deviceToken){
+        return res.status(400).json({message: "deviceToken & userId is required."})
+    }
 
     replaceFcmToken(userId, deviceToken,deviceType,(error:any, result:any) => {
         if(error){

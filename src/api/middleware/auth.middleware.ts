@@ -54,6 +54,34 @@ declare global {
 // };
 
 
+// Attaches req.user when a valid token is present, but never blocks the request —
+// lets routes prefer the authenticated userId while still falling back to a legacy
+// unauthenticated caller during a phased rollout (see devicetoken.controller.ts).
+export const optionalAuth = async(req:Request, res:Response, next: NextFunction) =>{
+    let token;
+
+    if (req.headers.authorization) {
+        if (req.headers.authorization.startsWith('Bearer')) {
+            token = req.headers.authorization.split(' ')[1];
+        }
+        else {
+            token = req.headers.authorization;
+        }
+    }
+
+    if (!token) {
+        return next();
+    }
+
+    try {
+        req.user = jwt.verify(token, "supersecretkeys" as string);
+    } catch (error) {
+        // invalid/expired token on an optional-auth route — fall through unauthenticated
+        // instead of rejecting, so the legacy fallback path still works
+    }
+    next()
+}
+
 export const protectedRoute = async(req:Request, res:Response, next: NextFunction) =>{
     let token;
     let message = 'Not authorized to access this route.';

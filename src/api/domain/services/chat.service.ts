@@ -1,6 +1,7 @@
 export {
     addMembersLogic,
     assignAdminLogic,
+    checkInviteNameLogic,
     clearAllChatLogic,
     createGroupLogic,
     createNewChatLogic,
@@ -12,8 +13,10 @@ export {
     getGroupInfoLogic,
     getMessagesOfChatIDLogic,
     groupConversationsLogic,
+    joinGroupByInviteLogic,
     leaveGroupLogic,
     removeMemberLogic,
+    revokeGroupInviteLinkLogic,
     sendMessageLogic,
     updateGroupInfoLogic,
 } from "../models/chat.model";

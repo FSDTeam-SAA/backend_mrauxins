@@ -14,6 +14,7 @@ import { TenantAwareAuth } from "firebase-admin/lib/auth/tenant-manager";
 import {v4 as uuidv4} from "uuid"
 import { CLICK_NOTIFICATION_TYPE, NotificationType } from "../schema/notification.schema";
 import { env } from "../../../infrastructure/env";
+import { buildGroupInfoPayload, buildSenderPayload } from "../../helper/notificationPayload";
 
 interface SendMessageData {
     chatId: string;
@@ -360,14 +361,10 @@ export const sendMessageLogic = async (
                             click_action: CLICK_NOTIFICATION_TYPE,
                             type: NotificationType.CHAT_MESSAGE,
                             chat_id: chatId,
-                            sender: JSON.stringify({
-                                isActiveNickname: matched?.isActiveNickname,
-                                nickName: matched?.nickName,
-                                ...senderDetails
-                            }),
+                            sender: JSON.stringify(buildSenderPayload(senderDetails)),
                             temp_message_id: tempMessageId,
                             content,
-                            groupInfo:JSON.stringify(chat),
+                            groupInfo:JSON.stringify(buildGroupInfoPayload(chat)),
                             chatType:chat.type === ChatType.ONE_TO_ONE 
                                 ? ChatType.ONE_TO_ONE : chat.type === ChatType.GROUP 
                                 ? ChatType.GROUP : ChatType.CHANNEL,
@@ -1019,6 +1016,7 @@ export const getConversationsLogic = async (
                     createdBy: 1,
                     encryptedAESKey: 1,
                     isProfilePhoto: 1,
+                    isGroupProfilePhoto: 1,
                     isSendMessage: 1,
                     sortIndex:1,
                     isPinned:1,
@@ -1356,6 +1354,7 @@ export const getConversationsLogic = async (
                     createdBy: 1,
                     encryptedAESKey: 1,
                     isProfilePhoto: 1,
+                    isGroupProfilePhoto: 1,
                     isSendMessage: 1,
                     
                     participantDetails: {
@@ -1762,6 +1761,7 @@ export const getForwardedConversationsLogic = async (
                     createdBy: 1,
                     encryptedAESKey: 1,
                     isProfilePhoto: 1,
+                    isGroupProfilePhoto: 1,
                     isSendMessage: 1,
                     participantDetails: {
                         _id: 1,
@@ -2283,7 +2283,7 @@ const toBoolean = (value: any, fallback = false): boolean => {
     return Boolean(value);
 };
 
-const createInviteLink = (chatId: string) => `the212.me/+${chatId}${new mongoose.Types.ObjectId().toString()}`;
+const createInviteLink = (chatId: string) => `messenger212://join/${chatId}/${new mongoose.Types.ObjectId().toString()}`;
 
 export const createGroupLogic = async (
     reqBody: any,
@@ -2344,7 +2344,7 @@ export const createGroupLogic = async (
         const title = chatType === ChatType.GROUP ? "New Group Invitation" : "New Channel Invitation";
         const body = `You were added to "${groupName}"`;
 
-        for (const user of parsedParticipants) {
+        await Promise.all(parsedParticipants.map(async (user: string) => {
             const receiverDetails = await userSchema.findById(user);
             if (!receiverDetails?.isStopNotification) {
                 const notificationPayload = {
@@ -2352,10 +2352,10 @@ export const createGroupLogic = async (
                     body,
                     chat_id: chatId,
                     click_action: CLICK_NOTIFICATION_TYPE,
-                    sender: JSON.stringify(groupCreator),
+                    sender: JSON.stringify(buildSenderPayload(groupCreator)),
                     type: chatType === ChatType.GROUP ? NotificationType.NEW_GROUP_CREATED : NotificationType.CREATE_NEW_CHANNEL,
                     content: `You were added to "${groupName}"`,
-                    groupInfo: JSON.stringify(result),
+                    groupInfo: JSON.stringify(buildGroupInfoPayload(result)),
                     senderId: creatorId,
                     receiverId: user.toString(),
                     isMuteNotification: receiverDetails?.isMuteNotification
@@ -2363,7 +2363,7 @@ export const createGroupLogic = async (
                 await sentPushNotificationToUser(user.toString(), notificationPayload);
                 loggerMsg("New group created push sent successfully", "debug");
             }
-        }
+        }));
 
         const chatParticipantsData = newChat.participants.map(participant => ({
             chatId: newChat._id,
@@ -2556,51 +2556,51 @@ export const addMembersLogic = async (
 
 // Function to send notifications and emit socket events
 const sendNotificationsAndEmitEvents = async (chat: any, loggedinUser: any, io: any, systemMessages: any[], allAddedMembers: any[]) => {
-    const title = chat.type === ChatType.GROUP ? "New Group Update" : "New Channel Update";
-    const body = `New members joined \"${chat.groupName}\"`;
+    const typeName = chat.type === ChatType.GROUP ? "group" : "channel";
+    const notifType = chat.type === ChatType.GROUP ? NotificationType.GROUP_INVITE : NotificationType.CHANNEL_INVITE;
 
-    // ✅ Fetch all active participants (not removed)
     const activeParticipants = await chatParticipantSchema.find({ chatId: chat._id, isRemoved: false }).select("userId").lean();
     const activeUserIds = activeParticipants.map(p => p.userId.toString());
-
-    // ✅ Fetch added members' userIds
     const addedMemberIds = allAddedMembers.map(m => m._id.toString());
+    const adminId = loggedinUser._id.toString();
 
+    // Send push + in-app notification ONLY to newly added members
+    await Promise.all(addedMemberIds.map(async (memberId) => {
+        const user = await userSchema.findById(memberId).select("_id isStopNotification isMuteNotification");
+        if (!user || user.isStopNotification) return;
+
+        await sentPushNotificationToUser(memberId, {
+            title: chat.groupName,
+            body: `${loggedinUser.name || "Admin"} added you to this ${typeName}`,
+            chat_id: chat._id.toString(),
+            click_action: CLICK_NOTIFICATION_TYPE,
+            sender: JSON.stringify(buildSenderPayload(loggedinUser)),
+            type: notifType,
+            content: `${loggedinUser.name || "Admin"} added you to "${chat.groupName}"`,
+            groupInfo: JSON.stringify(buildGroupInfoPayload(chat)),
+            senderId: adminId,
+            receiverId: memberId,
+            isMuteNotification: user.isMuteNotification,
+        });
+    }));
+
+    // Emit socket events to all active participants
     await Promise.all(activeUserIds.map(async (userId) => {
-        const user = await userSchema.findById(userId).select("_id isStopNotification isMuteNotification");
-        if (!user) return;
-
-        if (!user.isStopNotification) {
-            await sentPushNotificationToUser(userId, {
-                title, body, chat_id: chat._id.toString(),
-                click_action: CLICK_NOTIFICATION_TYPE,
-                sender: JSON.stringify(loggedinUser),
-                type: chat.type === ChatType.GROUP ? NotificationType.GROUP_INVITE : NotificationType.CHANNEL_INVITE,
-                content: `A new member was added to \"${chat.groupName}\"`,
-                groupInfo: JSON.stringify(chat),
-                senderId: loggedinUser._id.toString(),
-                receiverId: userId,
-                isMuteNotification: user.isMuteNotification,
-            });
-        }
-
         const socketId = userSocketMap[userId];
-        if (socketId) {
-            // ✅ "added_to_group" sirf naye members ko milega
-            if (addedMemberIds.includes(userId)) {
-                io.to(socketId).emit("added_to_group", { 
-                    chatId: chat._id, 
-                    groupName: chat.groupName, 
-                    addedBy: loggedinUser, 
-                    groupInfo: chat 
-                });
-            }
+        if (!socketId) return;
 
-            // ✅ "receive_system_message" sabhi active participants ko milega
-            systemMessages.forEach(message => {
-                io.to(socketId).emit("receive_system_message", message);
+        if (addedMemberIds.includes(userId)) {
+            io.to(socketId).emit("added_to_group", {
+                chatId: chat._id,
+                groupName: chat.groupName,
+                addedBy: loggedinUser,
+                groupInfo: chat
             });
         }
+
+        systemMessages.forEach(message => {
+            io.to(socketId).emit("receive_system_message", message);
+        });
     }));
 };
 
@@ -2809,10 +2809,10 @@ export const assignAdminLogic = async (
                 body: actionMessage,
                 chat_id: chatId.toString(),
                 click_action: CLICK_NOTIFICATION_TYPE,
-                sender: JSON.stringify(loggedinUser),
+                sender: JSON.stringify(buildSenderPayload(loggedinUser)),
                 type: NotificationType.ASSIGN_ADMIN,
                 content: actionMessage,
-                groupInfo: JSON.stringify(chat),
+                groupInfo: JSON.stringify(buildGroupInfoPayload(chat)),
                 senderId: loggedInUserId,
                 receiverId: userId.toString(),
                 isMuteNotification: receiverUser.isMuteNotification,
@@ -2988,12 +2988,12 @@ export const leaveGroupLogic = async (
                         body,
                         chat_id: String(group._id),
                         click_action: CLICK_NOTIFICATION_TYPE,
-                        sender: JSON.stringify(leaveUserDetails),
+                        sender: JSON.stringify(buildSenderPayload(leaveUserDetails)),
                         type: ChatType.GROUP === group.type ? NotificationType.LEAVE_GROUP : NotificationType.LEAVE_CHANNEL,
                         content: `${leaveUserDetails?.name} left the group "${group.groupName}".`,
                         groupImage:`${group.groupImage}`,
                         groupName:`${group.groupName}`,
-                        groupInfo: JSON.stringify(group),
+                        groupInfo: JSON.stringify(buildGroupInfoPayload(group)),
                         senderId: userId.toString(),
                         receiverId: participant.userId.toString(),
                         isMuteNotification: receiverDetails?.isMuteNotification,
@@ -3223,9 +3223,9 @@ export const removeMemberLogic = async (
                 click_action: CLICK_NOTIFICATION_TYPE,
                 type: ChatType.GROUP === group.type ? NotificationType.REMOVE_MEMBER_GROUP : NotificationType.REMOVE_MEMBER_CHANNEL,
                 chat_id: chatId.toString(),
-                sender: JSON.stringify(removerUser),
+                sender: JSON.stringify(buildSenderPayload(removerUser)),
                 content: `You are removed from \"${group.groupName}\"`,
-                groupInfo: JSON.stringify(group),
+                groupInfo: JSON.stringify(buildGroupInfoPayload(group)),
                 senderId: userId.toString(),
                 receiverId: memberId.toString(),
                 isMuteNotification: receiverDetails?.isMuteNotification,
@@ -3258,10 +3258,10 @@ export const removeMemberLogic = async (
                         body: `${removerUser?.name} removed ${removedMember?.name} from "${group.groupName}".`,
                         chat_id: chatId.toString(),
                         click_action: CLICK_NOTIFICATION_TYPE,
-                        sender: JSON.stringify(removerUser),
+                        sender: JSON.stringify(buildSenderPayload(removerUser)),
                         type: ChatType.GROUP === group.type ? NotificationType.REMOVE_MEMBER_GROUP : NotificationType.REMOVE_MEMBER_CHANNEL,
                         content: `${removerUser?.name} removed ${removedMember?.name} from "${group.groupName}".`,
-                        groupInfo: JSON.stringify(group),
+                        groupInfo: JSON.stringify(buildGroupInfoPayload(group)),
                         senderId: userId.toString(),
                         receiverId: participant.userId.toString(),
                         isMuteNotification: receiverDetails?.isMuteNotification,
@@ -3382,6 +3382,7 @@ export const getGroupInfoLogic = async (
             createdBy: group.createdBy,
             type: group.type,
             participants: group.hideMembersInfo && !isAdmin ? [] : participants,
+            participantCount: participants.length,
             admins: group.hideMembersInfo && !isAdmin ? [] : admins,
             lastMessage: group.lastMessage,
             isProfilePhoto: group.isProfilePhoto,
@@ -3391,6 +3392,7 @@ export const getGroupInfoLogic = async (
             hideMembersInfo: group.hideMembersInfo,
             hideNewMembersMessage: group.hideNewMembersMessage,
             restrictContentSharing: group.restrictContentSharing,
+            isGroupProfilePhoto: group.isGroupProfilePhoto ?? true,
             isAdmin, // Whether the current user is an admin
         };
 
@@ -3582,7 +3584,7 @@ export const updateGroupInfoLogic = async (
     files: any,
     callback: (error: any, result: any) => void
 ) => {
-    const { groupName, isProfilePhoto, isSendMessage, chatType, privacy, hideMembersInfo, hideNewMembersMessage, restrictContentSharing } = reqBody;
+    const { groupName, isProfilePhoto, isSendMessage, chatType, privacy, hideMembersInfo, hideNewMembersMessage, restrictContentSharing, isGroupProfilePhoto, inviteLink } = reqBody;
     try {
         // Find the group chat (Now uses `ChatType.GROUP` instead of `isGroup`)
         const chat = await chatSchema.findOne({ _id: chatId, type: chatType });
@@ -3625,13 +3627,35 @@ export const updateGroupInfoLogic = async (
         if (hideMembersInfo !== undefined) chat.hideMembersInfo = toBoolean(hideMembersInfo, chat.hideMembersInfo);
         if (hideNewMembersMessage !== undefined) chat.hideNewMembersMessage = toBoolean(hideNewMembersMessage, chat.hideNewMembersMessage);
         if (restrictContentSharing !== undefined) chat.restrictContentSharing = toBoolean(restrictContentSharing, chat.restrictContentSharing);
-        
+        if (isGroupProfilePhoto !== undefined) chat.isGroupProfilePhoto = toBoolean(isGroupProfilePhoto, chat.isGroupProfilePhoto);
+        if (inviteLink !== undefined && typeof inviteLink === "string" && inviteLink.length > 0) chat.inviteLink = inviteLink;
+
         // ✅ Handle group profile picture update
         if (files && files.length > 0) {
             chat.groupImage = files.map((file:any) => file.key)[0]
         }
 
         await chat.save();
+
+        // Broadcast isSendMessage changes to all group participants in real-time
+        if (isSendMessage !== undefined) {
+            const io = getIo();
+            const participants = await chatParticipantSchema.find({
+                chatId: chat._id,
+                isRemoved: false,
+            });
+            for (const participant of participants) {
+                const participantId = participant.userId.toString();
+                if (participantId === userId) continue;
+                const socketId = userSocketMap[participantId];
+                if (socketId) {
+                    io.to(socketId).emit("group_send_permission_updated", {
+                        chatId: chat._id,
+                        isSendMessage: chat.isSendMessage,
+                    });
+                }
+            }
+        }
 
         return callback(null, chat);
     } catch (error) {
@@ -3649,6 +3673,122 @@ export const updateGroupInfoLogic = async (
     }
 };
 
+export const revokeGroupInviteLinkLogic = async (
+    userId: string,
+    chatId: string,
+    callback: (error: any, result: any) => void
+) => {
+    try {
+        const chat = await chatSchema.findOne({ _id: chatId, type: ChatType.GROUP });
+
+        if (!chat) {
+            return callback(
+                {
+                    status: 404,
+                    code: "CHAT_NOT_FOUND",
+                    message: "Group chat not found.",
+                },
+                null
+            );
+        }
+
+        const isAdmin = chat.admins.some(
+            (adminId) => adminId.toString() === userId
+        );
+        if (!isAdmin) {
+            return callback(
+                {
+                    status: 400,
+                    code: "FORBIDDEN",
+                    message: "Only admins can revoke invite links.",
+                },
+                null
+            );
+        }
+
+        chat.inviteLink = createInviteLink(chat._id.toString());
+        await chat.save();
+
+        return callback(null, {
+            groupId: chat._id,
+            inviteLink: chat.inviteLink,
+            privacy: chat.privacy,
+        });
+    } catch (error) {
+        return callback(
+            {
+                status: 500,
+                code: "INTERNAL_SERVER_ERROR",
+                message:
+                    error instanceof Error
+                        ? error.message
+                        : "An unexpected error occurred.",
+            },
+            null
+        );
+    }
+};
+
+
+export const checkInviteNameLogic = async (
+    name: string,
+    excludeChatId: string,
+    callback: (error: any, result: any) => void
+) => {
+    try {
+        const escapedName = name.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+        const query: any = { inviteLink: new RegExp(`\\/${escapedName}$`) };
+        if (excludeChatId) {
+            try { query._id = { $ne: new mongoose.Types.ObjectId(excludeChatId) }; } catch (_) { /* ignore bad id */ }
+        }
+        const existing = await chatSchema.findOne(query).select('_id').lean();
+        return callback(null, { available: !existing });
+    } catch (error) {
+        return callback({ status: 500, code: "INTERNAL_SERVER_ERROR", message: "An error occurred." }, null);
+    }
+};
+
+export const joinGroupByInviteLogic = async (
+    chatId: string,
+    inviteLink: string,
+    userId: string,
+    callback: (error: any, result: any) => void
+) => {
+    try {
+        const chat = await chatSchema.findById(chatId);
+        if (!chat) {
+            return callback({ status: 404, code: "CHAT_NOT_FOUND", message: "Group not found." }, null);
+        }
+        if (chat.type !== ChatType.GROUP && chat.type !== ChatType.CHANNEL) {
+            return callback({ status: 400, code: "INVALID_ACTION", message: "Invalid chat type." }, null);
+        }
+        if (chat.privacy === "private" && inviteLink !== chat.inviteLink) {
+            return callback({ status: 400, code: "INVALID_INVITE_LINK", message: "Invalid or expired invite link." }, null);
+        }
+
+        const userObjId = new mongoose.Types.ObjectId(userId);
+        const isAlreadyParticipant = chat.participants.some((p) => p.equals(userObjId));
+        if (isAlreadyParticipant) {
+            return callback({ status: 400, code: "ALREADY_MEMBER", message: "You are already a member." }, null);
+        }
+
+        chat.participants.push(userObjId);
+        await chat.save();
+
+        await chatParticipantSchema.findOneAndUpdate(
+            { chatId: chat._id, userId: userObjId },
+            { $set: { isRemoved: false, rejoinedAt: new Date() } },
+            { upsert: true, new: true }
+        );
+
+        return callback(null, { chatId: chat._id, groupName: chat.groupName, type: chat.type });
+    } catch (error) {
+        return callback({
+            status: 500, code: "INTERNAL_SERVER_ERROR",
+            message: error instanceof Error ? error.message : "An unexpected error occurred."
+        }, null);
+    }
+};
 
 export const deleteChatApi = async(
     userId:string,

@@ -72,25 +72,6 @@ export const createNewStoryLogic = async (
 
     loggerMsg("Story saved to the database successfully.", "info");
 
-    // Send push notifications asynchronously
-    // await Promise.all(
-    //     connectedUsers.map(async (connectedUserId) => {
-    //         if (connectedUserId !== userId) {
-    //             const notificationPayload = {
-    //                 title: `New story by ${user.userName}`,
-    //                 body: caption || "Check out the new story!",
-    //                 click_action: CLICK_NOTIFICATION_TYPE,
-    //                 type: "view_new_story",
-    //                 story_id: newStory._id.toString(),
-    //             };
-
-    //             loggerMsg(`Sending push notification to ${connectedUserId}`, "debug");
-    //             await sentPushNotificationToUser(connectedUserId, notificationPayload);
-    //             loggerMsg(`Push notification sent to ${connectedUserId}`, "info");
-    //         }
-    //     })
-    // );
-
     // return successResponse(res, "Story uploaded successfully", storyEventData);
     return callback(null,storyEventData)
   } catch (error) {

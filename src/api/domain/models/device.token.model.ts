@@ -1,7 +1,8 @@
 import mongoose from "mongoose";
+import retry from "retry";
 import { saveDeviceToken } from "../../helper/helper";
 import { loggerMsg } from "../../lib/logger";
-import admin from "../../services/firebase";
+import admin, { isFirebaseInitialized } from "../../services/firebase";
 import { deviceToken } from "../schema/devicetoken.schema";
 import notificationSchema, { NotificationType } from "../schema/notification.schema";
 import { ChatType } from "../schema/chat.schema";
@@ -36,7 +37,7 @@ export const deleteDeviceTokenApiLogic = async(
     try {
         // If deviceToken is provided, find and delete it.
         const deleteCriteria:{deviceToken?: string, userId?: mongoose.Types.ObjectId} = {};
-        if(deviceToken) deleteCriteria.deviceToken = token
+        if(token) deleteCriteria.deviceToken = token
         if(userId) deleteCriteria.userId = new mongoose.Types.ObjectId(userId);
 
         // Attempt to delete the device token from the database.
@@ -52,12 +53,11 @@ export const deleteDeviceTokenApiLogic = async(
 
         return callback(null,"Device token deleted successfully")
     } catch (error) {
-        return callback(null,"Device token deleted successfully")
-        // return callback({
-        //     status: 500,
-        //     code: "INTERNAL_SERVER_ERROR",
-        //     message: error instanceof Error ? error.message : "An unexpected error occurred."
-        // },null)
+        return callback({
+            status: 500,
+            code: "INTERNAL_SERVER_ERROR",
+            message: error instanceof Error ? error.message : "An unexpected error occurred."
+        },null)
     }
 }
 
@@ -115,8 +115,13 @@ interface notificationPayload {
 export const sentPushNotificationToUser = async (userId: string, {
     title, body, click_action, type, chat_id, story_id, sender,channel_name,token,call_type,sender_id,receiver_id,content,temp_message_id, groupInfo,chatType,groupName, groupImage, senderId,receiverId, callId, encryptedAESKey, deviceType, isInComeingCall, isMuteNotification}: notificationPayload
 ):Promise<void> => {
-    
+
     try {
+        if(!isFirebaseInitialized){
+            loggerMsg(`Firebase Admin SDK is not initialized — skipping push notification for user ${userId}`, "warn");
+            return;
+        }
+
         const io = getIo()
         const tokens = await getUserTokens(userId);
         
@@ -215,7 +220,32 @@ export const sentPushNotificationToUser = async (userId: string, {
         //         body
         //     };
         // }
-        const response = await admin.messaging().sendEachForMulticast(message);  
+
+        // FCM enforces a hard ~4KB total payload limit. `content` (the raw/
+        // decrypted message body) is the one field here whose size is
+        // unbounded, so it's the one worth guarding — truncate it rather
+        // than let FCM reject the whole send outright.
+        const FCM_MAX_PAYLOAD_BYTES = 4000;
+        const dataSize = Buffer.byteLength(JSON.stringify(message.data));
+        if (dataSize > FCM_MAX_PAYLOAD_BYTES && message.data.content) {
+            const overage = dataSize - FCM_MAX_PAYLOAD_BYTES;
+            const rawContent = String(message.data.content);
+            message.data.content = rawContent.slice(0, Math.max(0, rawContent.length - overage - 20)) + "…";
+            loggerMsg(`Notification payload for user ${userId} exceeded ${FCM_MAX_PAYLOAD_BYTES} bytes (${dataSize}); truncated content field`, "warn");
+        }
+
+        const response = await new Promise<admin.messaging.BatchResponse>((resolve, reject) => {
+            const operation = retry.operation({ retries: 3, factor: 2, minTimeout: 500, maxTimeout: 4000 });
+            operation.attempt((attempt) => {
+                admin.messaging().sendEachForMulticast(message).then(resolve).catch((error) => {
+                    if(operation.retry(error as Error)){
+                        loggerMsg(`FCM send attempt ${attempt} failed for user ${userId}, retrying: ${error instanceof Error ? error.message : error}`, "warn");
+                        return;
+                    }
+                    reject(operation.mainError() || error);
+                });
+            });
+        });
         if(type === NotificationType.NEW_GROUP_CREATED || type === NotificationType.CREATE_NEW_CHANNEL || type === NotificationType.ASSIGN_ADMIN || type === NotificationType.CHANNEL_INVITE || type === NotificationType.DELETE_GROUP || type === NotificationType.DELETE_CHANNEL || type === NotificationType.GROUP_INVITE || type === NotificationType.REMOVED_GROUP || type === NotificationType.REMOVED_CHANNEL || type === NotificationType.LEAVE_GROUP || type === NotificationType.LEAVE_CHANNEL || type === NotificationType.AGORA_END_CALL){
             const notification = new notificationSchema({
                 receiverId:new mongoose.Types.ObjectId(receiverId),
@@ -285,22 +315,39 @@ export const sentPushNotificationToUser = async (userId: string, {
         loggerMsg(`Notification saved successfully..`,"debug");
       
 
-        // Handle errors or failed tokens
+        // Handle errors or failed tokens. FCM per-token error codes tell us
+        // whether a token is permanently dead (prune it so it isn't retried
+        // forever) or the failure was transient (leave it, log only).
         if (response.failureCount > 0) {
-            const failedTokens: string[] = [];
+            const deadTokenCodes = new Set([
+                "messaging/registration-token-not-registered",
+                "messaging/invalid-registration-token",
+                "messaging/invalid-argument",
+                "messaging/mismatched-credential",
+            ]);
+            const deadTokens: string[] = [];
+            const transientFailures: { token: string, code?: string }[] = [];
+
             response.responses.forEach((resp, idx) => {
                 if (!resp.success) {
-                    failedTokens.push(tokens[idx]);
+                    const code = resp.error?.code;
+                    if (code && deadTokenCodes.has(code)) {
+                        deadTokens.push(tokens[idx]);
+                    } else {
+                        transientFailures.push({ token: tokens[idx], code });
+                    }
                 }
             });
 
-            loggerMsg(
-                `Failed to send notifications to some tokens: ${JSON.stringify(failedTokens)}`,
-                "error"
-            );
-            // console.error("Failed tokens:", failedTokens);
+            if (deadTokens.length > 0) {
+                await deviceToken.deleteMany({ deviceToken: { $in: deadTokens } });
+                loggerMsg(`Pruned ${deadTokens.length} dead device token(s) for user ${userId}: ${JSON.stringify(deadTokens)}`, "warn");
+            }
+            if (transientFailures.length > 0) {
+                loggerMsg(`Transient failure sending notification to user ${userId} for some tokens: ${JSON.stringify(transientFailures)}`, "error");
+            }
         }
     } catch (error) {
-        console.error("Error sending notification: ",error)
+        loggerMsg(`Error sending notification to user ${userId}: ${error instanceof Error ? error.message : error}`, "error");
     }
 }

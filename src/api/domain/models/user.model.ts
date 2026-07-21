@@ -21,6 +21,7 @@ import crypto from "crypto";
 import chatParticipantSchema from "../schema/chat.participant.schema";
 import { Story } from "../schema/stories.schema";
 import { formatUserResponse, IUserResponse } from "../dto/user.dto";
+import { buildSenderPayload } from "../../helper/notificationPayload";
 
 interface userData{
     email: string; 
@@ -81,6 +82,10 @@ export const adsConfigData = {
     ]
 };
 
+const shouldSendOtpEmail = () => {
+    return Boolean(env.SMTP_HOST && env.SMTP_PORT && env.SMTP_USER && env.SMTP_PASS);
+};
+
 export const adsConfigLogic = async(
     callback:(error:any, result:any) => void
 )=>{
@@ -117,12 +122,7 @@ export const handleOtp = async (email:string, callback:any) => {
     try {
         let user = await userSchema.findOne({ email }).select('otp otpExpiry');
 
-        let otp;
-        if(email === "test@gmail.com"){
-            otp = "123456"
-        }else{
-            otp = env.NODE_ENV === "development" ? generateOtp() : "123456";
-        }
+        const otp = email === "test@gmail.com" ? "123456" : generateOtp();
         // const otp = "123456";
         let otpExpiry = new Date();
         otpExpiry.setMinutes(otpExpiry.getMinutes() + 10);
@@ -138,8 +138,11 @@ export const handleOtp = async (email:string, callback:any) => {
         user.isEmailVerify= false,
         await user.save();
         
-        // If OTP email sending is needed
-        env.NODE_ENV ==="development" && await sentOtpService(email, otp);  // Call external service for email
+        if (shouldSendOtpEmail()) {
+            await sentOtpService(email, otp);
+        } else {
+            loggerMsg("SMTP is not configured. Skipping OTP email send.", "warn");
+        }
 
         return callback(null, "Otp Sent Successfully");
     } catch (error) {
@@ -538,6 +541,7 @@ export const getAllUsersLogic = async (
     loggedInUserId: string | undefined,
     pagination: { page: number; limit: number },
     searchQuery: string | undefined,
+    requestContactNumbers: string[],
     callback: (error: any, result: any) => void
 ) => {
     try {
@@ -561,64 +565,53 @@ export const getAllUsersLogic = async (
         }
 
         const normalizePhoneNumber = (phone: string) => phone.replace(/\D/g, "");
-        const normalizedContacts = currentUser.contacts?.map(normalizePhoneNumber) || [];
+        const storedContacts = currentUser.contacts?.map(normalizePhoneNumber) || [];
+        // Prefer contact numbers sent by the client (fresh from device); fall back to MongoDB stored list
+        const normalizedContacts = requestContactNumbers.length > 0
+            ? requestContactNumbers.map(normalizePhoneNumber)
+            : storedContacts;
+
         const escapeRegex = (text: string) => text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
         let escapedSearchQuery = searchQuery ? escapeRegex(searchQuery) : "";
 
-        // Fetch users with whom the logged-in user has chatted
-        // **Fetch cha participants where the logged-in user is part of chat **
-        const chatParticipants = await chatSchema.aggregate([
-            {$match:{participants: new mongoose.Types.ObjectId(loggedInUserId), isFirstMessage: 1} },
-            {
-                $lookup: {
-                    from: "chatparticipants", // Make sure this matches your actual collection name
-                    localField: "participants",
-                    foreignField: "userId",
-                    as: "chatParticipants"
-                }
-            },
-            {
-                $unwind: "$chatParticipants"
-            },
-            {
-                $match: {
-                    "chatParticipants.isRemoved": false, // Filter out removed users
-                    "chatParticipants.isDeleted": {$ne : true}, // Ensure deleted chats are excluded
-                    "chatParticipants.userId": { $ne: new mongoose.Types.ObjectId(loggedInUserId) } // Exclude the logged-in user
-                }
-            },
-            {
-                $group: {
-                    _id: "$chatParticipants.userId"
-                }
-            }
-        ]).then((chats) => chats.map((chat) => new mongoose.Types.ObjectId(chat._id)));
+        let matchCondition: any;
 
-
-        // Default condition: Only contacts and chat users
-        let matchCondition: any = {
-            _id: { $ne: new mongoose.Types.ObjectId(loggedInUserId) },
-            $or: [
-                { phone: { $in: normalizedContacts } }, // Contacts
-                { _id: { $in: chatParticipants } } // Users with whom the user has chatted
-            ],
-            isVerified: true,
-            isProfileSetUp: true
-        };
-
-        // If search query exists, include public profiles in the search
         if (searchQuery) {
-            matchCondition.$or.push({ profilePrivacy: "public" });
-            matchCondition.$and = [
-                {
+            // Search mode: include contacts, chat participants, and public profiles
+            const chatParticipants = await chatSchema.aggregate([
+                { $match: { participants: new mongoose.Types.ObjectId(loggedInUserId), isFirstMessage: 1 } },
+                { $lookup: { from: "chatparticipants", localField: "participants", foreignField: "userId", as: "chatParticipants" } },
+                { $unwind: "$chatParticipants" },
+                { $match: { "chatParticipants.isRemoved": false, "chatParticipants.isDeleted": { $ne: true }, "chatParticipants.userId": { $ne: new mongoose.Types.ObjectId(loggedInUserId) } } },
+                { $group: { _id: "$chatParticipants.userId" } }
+            ]).then((chats) => chats.map((chat) => new mongoose.Types.ObjectId(chat._id)));
+
+            matchCondition = {
+                _id: { $ne: new mongoose.Types.ObjectId(loggedInUserId) },
+                $or: [
+                    { phone: { $in: normalizedContacts } },
+                    { _id: { $in: chatParticipants } },
+                    { profilePrivacy: "public" }
+                ],
+                isVerified: true,
+                isProfileSetUp: true,
+                $and: [{
                     $or: [
-                        { userName: { $regex: escapedSearchQuery, $options: "i" } },
-                        { name: { $regex: escapedSearchQuery, $options: "i" } },
-                        { phone: { $regex: escapedSearchQuery, $options: "i" } },
-                        { email: { $regex: escapedSearchQuery, $options: "i" } }
+                        { userName: { $regex: `^${escapedSearchQuery}`, $options: "i" } },
+                        { name: { $regex: `^${escapedSearchQuery}`, $options: "i" } },
+                        { phone: { $regex: `^${escapedSearchQuery}`, $options: "i" } },
+                        { email: { $regex: `^${escapedSearchQuery}`, $options: "i" } }
                     ]
-                }
-            ];
+                }]
+            };
+        } else {
+            // Contacts tab: ONLY return users whose phone matches device contacts — no chat participants
+            matchCondition = {
+                _id: { $ne: new mongoose.Types.ObjectId(loggedInUserId) },
+                phone: { $in: normalizedContacts },
+                isVerified: true,
+                isProfileSetUp: true
+            };
         }
 
         // Build aggregation pipeline
@@ -754,17 +747,7 @@ export const getAllUsersLogic = async (
 
         const updatedUsers = await fetchNickname(users, loggedInUserId)
 
-        // Count total users matching criteria
-        const totalUsers = await userSchema.countDocuments({
-            // @ts-ignore
-            $or: [
-                { phone: { $in: normalizedContacts } },
-                { _id: { $in: chatParticipants } },
-                searchQuery ? { profilePrivacy: "public" } : null
-            ].filter(Boolean), // Remove null values
-            isVerified: true,
-            isProfileSetUp: true
-        });
+        const totalUsers = await userSchema.countDocuments(matchCondition);
 
         return callback(null, { users: updatedUsers, totalUsers });
     } catch (error) {
@@ -1115,7 +1098,7 @@ export const generateAgoraTokenLogic = async (
                         click_action: CLICK_NOTIFICATION_TYPE,
                         type:NotificationType.AGORA_CALL_INVITATION,
                         chat_id: chatId,
-                        sender: JSON.stringify(senderWithNickname),
+                        sender: JSON.stringify(buildSenderPayload(senderWithNickname)),
                         channel_name: channelName,
                         token,
                         call_type:
@@ -1135,7 +1118,6 @@ export const generateAgoraTokenLogic = async (
                         isInComeingCall:isInComeingCall,
                         isMuteNotification: false
                     };
-console.log("notificationPayload........",notificationPayload)
                     await sentPushNotificationToUser(participantId.toString(), notificationPayload);
                     
                     loggerMsg("Push notification sent successfully", "debug");
@@ -1275,13 +1257,7 @@ export const changeEmailAddress = async(
             }, null)
         }
 
-        // const otp = env.NODE_ENV === "development" ? generateOtp() : "123456";
-        let otp;
-        if(email === "test@gmail.com"){
-            otp = "123456"
-        }else{
-            otp = env.NODE_ENV === "development" ? generateOtp() : "123456";
-        }
+        const otp = email === "test@gmail.com" ? "123456" : generateOtp();
         
         // const otp = "123456";
         let otpExpiry = new Date();
@@ -1291,7 +1267,11 @@ export const changeEmailAddress = async(
         user.otpExpiry = otpExpiry;
         await user.save();
 
-        env.NODE_ENV ==="development" && await sentOtpService(email, otp);
+        if (shouldSendOtpEmail()) {
+            await sentOtpService(email, otp);
+        } else {
+            loggerMsg("SMTP is not configured. Skipping OTP email send.", "warn");
+        }
 
         return callback(null,"Otp send successfully.")
     } catch (error) {
