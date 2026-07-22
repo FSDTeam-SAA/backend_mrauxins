@@ -3,7 +3,7 @@ import { protectedRoute, optionalAuth} from "../../middleware/auth.middleware";
 import { validateRequest } from "../../middleware/validation.middleware";
 import { generateAgoraToken, getAgoraAppId, sentOtp, verifyOtp } from "../controllers/auth.controller";
 import { sendOtpValidationSchema, verifyOtpValidationSchema } from "../../utils/validation-schems/user.validation";
-import {  accountDeleted, adsConfig, checkUserName, getAllUsers, getDetailsOfSingleUser, isExist, newRefreshToken, requestToEmailChange, setNickname, syncContact, updateToggle, updateUserProfile, uploadMediaOnS3, verifyOtpAndChangeEmail } from "../controllers/user.controller";
+import {  accountDeleted, adsConfig, appConfig, checkUserName, getAllUsers, getDetailsOfSingleUser, isExist, newRefreshToken, requestToEmailChange, setNickname, syncContact, updateToggle, updateUserProfile, uploadMediaOnS3, verifyOtpAndChangeEmail } from "../controllers/user.controller";
 import upload, { decryptMessage, decryptMessage_1, descryptedContent, encryptMessage_1 } from "../../helper/helper";
 import {  createNewChat, getConversations,  getMessagesOfChatID,  sendMessage, uploadMediaOnChat, deleteMessage, clearAllChat, deleteChat, forwardConversations } from "../controllers/chat.controller";
 import { getSavedMessages, saveMessage, sendSavedMessages, unsaveMessage } from "../controllers/save.messages.controller";
@@ -28,6 +28,8 @@ export const appRoute = (router: express.Router): void => {
         router.use('/v1', route)
 
         route.get("/ads-config",adsConfig);
+
+        route.get("/app-config",appConfig);
 
         route.put("/setNickname", protectedRoute, setNickname);
         route.put("/toggle-nickname",protectedRoute, updateToggle)

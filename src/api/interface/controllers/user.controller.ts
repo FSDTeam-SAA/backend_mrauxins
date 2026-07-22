@@ -1,6 +1,6 @@
 import e, { Request, Response } from "express"
 import mongoose from "mongoose";
-import { addOrUpdateNickname, adsConfigLogic, changeEmailAddress, getAllUsersLogic, getSingleUserDetailsLogicApi, isUserNameExist, updateContacts, updateNicknameToggle, updateUserProfileLogic, uploadMediaOnS3Bucket, userAccountDeleted, usersNewRefreshToken, verifyEmailAddress } from "../../domain/services/user.service";
+import { addOrUpdateNickname, adsConfigLogic, appConfigLogic, changeEmailAddress, getAllUsersLogic, getSingleUserDetailsLogicApi, isUserNameExist, updateContacts, updateNicknameToggle, updateUserProfileLogic, uploadMediaOnS3Bucket, userAccountDeleted, usersNewRefreshToken, verifyEmailAddress } from "../../domain/services/user.service";
 import { ErrorResponse, successCreated, successResponse } from "../../helper/apiResponse";
 import { loggerMsg } from "../../lib/logger";
 import userSchema from "../../domain/schema/user.schema";
@@ -16,6 +16,19 @@ export const adsConfig = async (req: Request, res: Response) => {
             });
         }
         return successResponse(res, "Ads Config.", result)
+    })
+}
+
+export const appConfig = async (req: Request, res: Response) => {
+    appConfigLogic((error:any, result:any) => {
+        if(error){
+            return res.status(error.status).json({
+                status: error?.status,
+                code: error?.code,
+                message: error?.message
+            });
+        }
+        return successResponse(res, "App Config.", result)
     })
 }
 

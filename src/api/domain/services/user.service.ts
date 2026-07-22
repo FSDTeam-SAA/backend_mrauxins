@@ -1,6 +1,7 @@
 export {
     addOrUpdateNickname,
     adsConfigLogic,
+    appConfigLogic,
     changeEmailAddress,
     generateAgoraTokenLogic,
     getAgoraAppIdLogic,

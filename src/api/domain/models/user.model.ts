@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import mongoose, { MongooseError, Types } from "mongoose";
 import { downloadImageUploadS3, generateAccessToken, generateAgoraToken, generateECKeyPair, generateOtp, generateRefreshToken, saveDeviceToken } from "../../helper/helper";
 import { loggerMsg } from "../../lib/logger";
@@ -81,6 +83,25 @@ export const adsConfigData = {
         "admob",
     ]
 };
+
+export const appConfigLogic = async(
+    callback:(error:any, result:any) => void
+)=>{
+    try {
+        const configPath = path.join(process.cwd(), "app-config.json");
+        const raw = fs.readFileSync(configPath, "utf8");
+        return callback(null, JSON.parse(raw));
+    } catch (error) {
+        return callback(
+            {
+                status: 500,
+                code: "INTERNAL_SERVER_ERROR",
+                message: error instanceof Error ? error.message : "An unexpected error occurred.",
+            },
+            null
+        );
+    }
+}
 
 const shouldSendOtpEmail = () => {
     return Boolean(env.SMTP_HOST && env.SMTP_PORT && env.SMTP_USER && env.SMTP_PASS);

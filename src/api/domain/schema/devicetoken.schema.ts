@@ -10,7 +10,8 @@ interface IDeviceToken extends Document{
 
 const deviceTokenSchema = new Schema<IDeviceToken>({
     userId: {type: Schema.Types.ObjectId, ref: "User", required: true},
-    deviceToken: {type: String, required: true, /* unique: true */},
+    deviceToken: {type: String, required: true, unique: true },
+     // deviceToken: {type: String, required: true, /* unique: true */},
     deviceType: {type: String, enum: ["Android","ios","web"], default: "Web"}
 },{timestamps: true});
 
