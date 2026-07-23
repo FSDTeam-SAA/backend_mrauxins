@@ -1073,29 +1073,28 @@ export const generateAgoraTokenLogic = async (
                     }
                 }
                 
-                // if (receiverOnline) {
-                //     const socketId = userSocketMap[participantId.toString()];
-                //     io.to(socketId).emit("receiver-agora-token-generated", {
-                //         participantId: participantId.toString(),
-                //         token,
-                //         channel_name: channelName,
-                //         call_type:
-                //             type === CallType.VOICE
-                //                 ? CallType.VOICE
-                //                 : type === CallType.VIDEO
-                //                 ? CallType.VIDEO
-                //                 : type === CallType.VIDEO_GROUP_CALL
-                //                 ? CallType.VIDEO_GROUP_CALL
-                //                 : CallType.VOICE_GROUP_CALL,
-                //         chat_id: chatId,
-                //         sender: userDetails,
-                //         groupImage,
-                //         groupName,
-                //         callId: newCallHistory.callId,
-                //     });
-                //     console.log("+++++++++++++++++ CALL Event Sent successflly +++++++++++++++++")
-                //     loggerMsg("receiver-agora-token-generated", "debug");
-                // }
+                const receiverSocketId = userSocketMap[participantId.toString()];
+                if (receiverOnline && receiverSocketId) {
+                    io.to(receiverSocketId).emit("receiver-agora-token-generated", {
+                        participantId: participantId.toString(),
+                        token,
+                        channel_name: channelName,
+                        call_type:
+                            type === CallType.VOICE
+                                ? CallType.VOICE
+                                : type === CallType.VIDEO
+                                ? CallType.VIDEO
+                                : type === CallType.VIDEO_GROUP_CALL
+                                ? CallType.VIDEO_GROUP_CALL
+                                : CallType.VOICE_GROUP_CALL,
+                        chat_id: chatId,
+                        sender: senderWithNickname,
+                        groupImage,
+                        groupName,
+                        callId: newCallHistory.callId,
+                    });
+                    loggerMsg("receiver-agora-token-generated", "debug");
+                }
                 
                 const receiverDeviceType = await deviceToken.findOne({userId: new mongoose.Types.ObjectId(participantId)}).select("deviceType");
                  

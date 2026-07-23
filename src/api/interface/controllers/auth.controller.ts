@@ -64,7 +64,7 @@ export const generateAgoraToken = async(req: Request, res: Response) => {
     
     generateAgoraTokenLogic(userId, channelName, uid,chatId,body,(error, result) => {
         if(error){
-            res.status(error.status).json({
+            return res.status(error.status).json({
                 status: error?.status,
                 code: error?.code,
                 message: error?.message
@@ -78,7 +78,7 @@ export const generateAgoraToken = async(req: Request, res: Response) => {
 export const getAgoraAppId = async(req:Request, res: Response)=>{
     getAgoraAppIdLogic((error, result) => {
         if(error){
-            res.status(error.status).json({
+            return res.status(error.status).json({
                 status: error?.status,
                 code: error?.code,
                 message: error?.message
