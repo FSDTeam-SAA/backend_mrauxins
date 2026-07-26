@@ -415,19 +415,36 @@ export const generateAgoraToken = (
 
 export const saveDeviceToken = async (
     userId: string,
-    token: string,
-    deviceType: string
+    token: string | undefined,
+    deviceType: string,
+    voipToken?: string
 ) => {
-    if (!token || token.trim() === '') return null;
+    const hasToken = token && token.trim() !== '';
+    const hasVoipToken = voipToken && voipToken.trim() !== '';
+    if (!hasToken && !hasVoipToken) return null;
     try {
-    // Match on the physical device token alone (not {userId, token}), so a
-    // token that's already registered to a different account (previous
-    // login on a shared/reused device, or a reinstall) is reassigned to the
-    // current user instead of piling up as a second row for the same
-    // physical device.
+    if (hasToken) {
+        // Match on the physical device token alone (not {userId, token}), so a
+        // token that's already registered to a different account (previous
+        // login on a shared/reused device, or a reinstall) is reassigned to the
+        // current user instead of piling up as a second row for the same
+        // physical device.
+        const update: { userId: string; deviceToken: string; deviceType: string; voipToken?: string } = { userId, deviceToken: token as string, deviceType };
+        if (hasVoipToken) update.voipToken = voipToken as string;
+        return await deviceToken.findOneAndUpdate(
+            { deviceToken: token },
+            update,
+            { upsert: true, new: true }
+        );
+    }
+
+    // VoIP-only update: the PushKit token can arrive before the FCM token
+    // on a fresh launch. Attach it to this user's existing device row for
+    // this device type, or create one if this is the first token we've
+    // seen from that device.
     return await deviceToken.findOneAndUpdate(
-        { deviceToken: token },
-        { userId, deviceToken: token, deviceType },
+        { userId, deviceType },
+        { userId, deviceType, voipToken },
         { upsert: true, new: true }
     );
     } catch (error:any) {

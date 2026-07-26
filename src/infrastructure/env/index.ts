@@ -18,6 +18,13 @@ export const env = {
     APP_ID: process.env.APP_ID,
     APP_CERTIFICATE: process.env.APP_CERTIFICATE,
 
+    // Apple Push Notification service (iOS VoIP call pushes)
+    APNS_KEY_ID: process.env.APNS_KEY_ID,
+    APNS_TEAM_ID: process.env.APNS_TEAM_ID,
+    APNS_BUNDLE_ID: process.env.APNS_BUNDLE_ID,
+    APNS_AUTH_KEY: process.env.APNS_AUTH_KEY,
+    APNS_ENVIRONMENT: process.env.APNS_ENVIRONMENT,
+
     FIREBASE_CREDENTIALS: process.env.FIREBASE_CREDENTIALS,
     // SITE_TITLE: process.env.SITE_TITLE,
     // APP_URL: process.env.APP_URL,

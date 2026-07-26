@@ -11,6 +11,7 @@ import { getIo } from "../../../infrastructure/webserver/express/v1";
 import { savedMessageFromGroup } from "./messages.model";
 import { env } from "../../../infrastructure/env";
 import { sentPushNotificationToUser } from "./device.token.model";
+import { sendVoipPush } from "../../services/apns";
 import { callHistory, CallStatus, CallType } from "../schema/callhistory.schema";
 import { initiateCall } from "./callhistory.model";
 import {v4 as uuidv4} from "uuid"
@@ -1096,7 +1097,7 @@ export const generateAgoraTokenLogic = async (
                     loggerMsg("receiver-agora-token-generated", "debug");
                 }
                 
-                const receiverDeviceType = await deviceToken.findOne({userId: new mongoose.Types.ObjectId(participantId)}).select("deviceType");
+                const receiverDeviceType = await deviceToken.findOne({userId: new mongoose.Types.ObjectId(participantId)}).select("deviceType voipToken");
                  
                 const isInComeingCall = true;
                 // Send push notification to offline users
@@ -1139,9 +1140,32 @@ export const generateAgoraTokenLogic = async (
                         isMuteNotification: false
                     };
                     await sentPushNotificationToUser(participantId.toString(), notificationPayload);
-                    
+
                     loggerMsg("Push notification sent successfully", "debug");
-                
+
+                    // iOS: also send a direct APNs VoIP push so CallKit can
+                    // show the incoming-call screen even if the app is
+                    // backgrounded/killed — FCM alone can't wake it reliably
+                    // in that state. Sent alongside (not instead of) the FCM
+                    // push above; both carry the same callId so the client
+                    // de-dupes if it ends up handling both.
+                    if (receiverDeviceType?.deviceType === "ios" && receiverDeviceType?.voipToken) {
+                        await sendVoipPush(receiverDeviceType.voipToken, {
+                            callId: newCallHistory.callId,
+                            channel_name: channelName,
+                            token,
+                            call_type: notificationPayload.call_type,
+                            chat_id: chatId,
+                            sender: notificationPayload.sender,
+                            groupImage: groupImage || "",
+                            groupName: groupName || "",
+                            senderId: userId.toString(),
+                            receiverId: participantId.toString(),
+                            type: NotificationType.AGORA_CALL_INVITATION,
+                        });
+                        loggerMsg("VoIP push sent successfully", "debug");
+                    }
+
                 offlineUsers.push(participantId.toString());
             })
         );
