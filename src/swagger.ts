@@ -12,11 +12,11 @@ const doc = {
     },
     servers: [
         {
-            url: 'http://localhost:3000/api',
+            url: 'http://localhost:3001/api',
             description: 'Local Development Server',
         },
         {
-            url: 'http://18.130.137.253/api',
+            url: 'http://18.130.137.253:3001/api',
             description: 'Live Production Server',
         }
     ],
