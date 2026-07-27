@@ -73,7 +73,12 @@ const Messages = new Schema<IMessages>({
     }],
     isDeleted:{type: Boolean, default: false},
     deletedAt: {type: Date},
-    messageId: {type: String},
+    // unique + sparse: guards against the same client-generated tempMessageId
+    // being saved twice (e.g. the REST and Socket.IO send-message paths both
+    // firing for one message, or a client retry). sparse so system-generated
+    // messages that never set messageId (savedMessageFromGroup, channel
+    // broadcast messages) aren't affected by the uniqueness constraint.
+    messageId: {type: String, unique: true, sparse: true},
     deletedFor: [{type: mongoose.Schema.Types.ObjectId, ref: "User"}],// Tracks users who cleared the message
     isRead: { type: Boolean, default: false },
     isDelivered: {type: Boolean, default: false},

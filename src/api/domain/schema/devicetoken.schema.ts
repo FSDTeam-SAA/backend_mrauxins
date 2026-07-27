@@ -11,17 +11,12 @@ interface IDeviceToken extends Document{
 
 const deviceTokenSchema = new Schema<IDeviceToken>({
     userId: {type: Schema.Types.ObjectId, ref: "User", required: true},
-<<<<<<< HEAD
     // Not required: a fresh iOS install can register its PushKit voipToken
     // before the FCM deviceToken arrives (see saveDeviceToken in helper.ts).
     deviceToken: {type: String, unique: true, sparse: true },
     // iOS PushKit VoIP token — used to send incoming-call pushes directly
     // via APNs (FCM can't deliver the voip push type). Not set on Android.
     voipToken: {type: String, unique: true, sparse: true },
-=======
-    deviceToken: {type: String, required: true, unique: true },
-    // deviceToken: {type: String, required: true, /* unique: true */},
->>>>>>> 845a567c977beb087c00d8367f067700ae092cea
     deviceType: {type: String, enum: ["Android","ios","web"], default: "Web"}
 },{timestamps: true});
 

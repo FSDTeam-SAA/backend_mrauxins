@@ -165,9 +165,10 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
         isRead: isRead,
       };
 
+      let isDuplicateMessage = false;
       try {
         let mediaDetails: any[] = [];
-        await saveMediaMessageAsync(
+        const saveResult = await saveMediaMessageAsync(
           chatId,
           sender.toString(),
           content,
@@ -181,6 +182,7 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
           replyToMessageId,
           messageCreatedAt
         );
+        isDuplicateMessage = saveResult?.isDuplicate ?? false;
 
         loggerMsg("Save in database successfully", "debug");
 
@@ -203,7 +205,7 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
         socket.emit("message_save_failed", { chatId, messageId: tempMessageId, error: "Failed to save message" });
       }
 
-      if (chatType === ChatType.ONE_TO_ONE || chatType === ChatType.GROUP) {
+      if (!isDuplicateMessage && (chatType === ChatType.ONE_TO_ONE || chatType === ChatType.GROUP)) {
         loggerMsg("ChatType is ONE_TO_ONE & GROUP....", "debug");
         await Promise.all(
           (participants || []).map(async (participant) => {
@@ -293,7 +295,7 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
             }
           })
         );
-      } else if (chatType === ChatType.CHANNEL) {
+      } else if (!isDuplicateMessage && chatType === ChatType.CHANNEL) {
         loggerMsg("ChatType is CHANNEL....", "debug");
         await Promise.all(
           (participants || []).map(async (participant) => {
