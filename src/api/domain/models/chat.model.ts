@@ -929,8 +929,19 @@ export const getConversationsLogic = async (
                     
                     participantDetails: {
                         $cond: {
-                            if: { $eq: ["$type", "group"] }, // Check if it's a group chat
-                            then: "$participantDetails", // Keep all participants for group chats
+                            if: { $in: ["$type", ["group", "channel"]] }, // Check if it's a group/channel chat
+                            then: {
+                                $cond: {
+                                    if: {
+                                        $and: [
+                                            { $eq: ["$hideMembersInfo", true] },
+                                            { $not: [{ $in: [userObjectId, "$admins"] }] },
+                                        ],
+                                    },
+                                    then: [], // Hide members from non-admins when hideMembersInfo is set
+                                    else: "$participantDetails", // Keep all participants otherwise
+                                },
+                            },
                             else: {
                                 $filter: {
                                     input: "$participantDetails",
@@ -1285,8 +1296,19 @@ export const getConversationsLogic = async (
                 $addFields: {
                     participantDetails: {
                         $cond: {
-                            if: { $eq: ["$type", "group"] }, // Check if it's a group chat
-                            then: "$participantDetails", // Keep all participants for group chats
+                            if: { $in: ["$type", ["group", "channel"]] }, // Check if it's a group/channel chat
+                            then: {
+                                $cond: {
+                                    if: {
+                                        $and: [
+                                            { $eq: ["$hideMembersInfo", true] },
+                                            { $not: [{ $in: [userObjectId, "$admins"] }] },
+                                        ],
+                                    },
+                                    then: [], // Hide members from non-admins when hideMembersInfo is set
+                                    else: "$participantDetails", // Keep all participants otherwise
+                                },
+                            },
                             else: {
                                 $filter: {
                                     input: "$participantDetails",
@@ -1692,8 +1714,19 @@ export const getForwardedConversationsLogic = async (
                 $addFields: {
                     participantDetails: {
                         $cond: {
-                            if: { $eq: ["$type", "group"] }, // Check if it's a group chat
-                            then: "$participantDetails", // Keep all participants for group chats
+                            if: { $in: ["$type", ["group", "channel"]] }, // Check if it's a group/channel chat
+                            then: {
+                                $cond: {
+                                    if: {
+                                        $and: [
+                                            { $eq: ["$hideMembersInfo", true] },
+                                            { $not: [{ $in: [userObjectId, "$admins"] }] },
+                                        ],
+                                    },
+                                    then: [], // Hide members from non-admins when hideMembersInfo is set
+                                    else: "$participantDetails", // Keep all participants otherwise
+                                },
+                            },
                             else: {
                                 $filter: {
                                     input: "$participantDetails",
@@ -3338,6 +3371,13 @@ export const getGroupInfoLogic = async (
             return callback(null, {
                 status: 400,
                 message: "Group not found",
+            });
+        }
+
+        if (!validParticipantIds.includes(userId.toString())) {
+            return callback(null, {
+                status: 403,
+                message: "You are not a member of this group",
             });
         }
 
