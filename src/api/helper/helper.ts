@@ -431,11 +431,26 @@ export const saveDeviceToken = async (
         // physical device.
         const update: { userId: string; deviceToken: string; deviceType: string; voipToken?: string } = { userId, deviceToken: token as string, deviceType };
         if (hasVoipToken) update.voipToken = voipToken as string;
-        return await deviceToken.findOneAndUpdate(
+        const saved = await deviceToken.findOneAndUpdate(
             { deviceToken: token },
             update,
             { upsert: true, new: true }
         );
+
+        // A token refresh (Firebase periodically rotates FCM tokens) lands
+        // here with a new token value, which doesn't match any existing row,
+        // so the upsert above inserts a new row rather than replacing the
+        // old one. Without this, the old row keeps receiving pushes
+        // alongside the new one, so the same physical device gets sent (and
+        // displays) every push twice. Prune any other rows for this
+        // user+deviceType now that the current token is saved.
+        await deviceToken.deleteMany({
+            userId,
+            deviceType,
+            deviceToken: { $ne: token }
+        });
+
+        return saved;
     }
 
     // VoIP-only update: the PushKit token can arrive before the FCM token
