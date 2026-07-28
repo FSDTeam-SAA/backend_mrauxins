@@ -272,9 +272,10 @@ export const sendMessageLogic = async (
 
         
 
+        let isDuplicateMessage = false;
         try {
             if (["media", "image", "video", "audio", "document", "pdf", "mixed", "gif"].includes(type)) {
-                await saveMediaMessageAsync(
+                const saveResult = await saveMediaMessageAsync(
                     chatId,
                     sender.toString(),
                     content,
@@ -288,11 +289,12 @@ export const sendMessageLogic = async (
                     replyToMessageId,
                     messageCreatedAt
                 );
+                isDuplicateMessage = saveResult?.isDuplicate ?? false;
             }
         } catch (error) {
                 console.error("Error while saving message:", error);
                 io.emit("message_save_failed", { chatId, messageId: tempMessageId, error: "Failed to save message" });
-      
+
         }
         const handleMessageDelivery = async (participant: any) => {
             if (participant.toString() !== sender.toString()) {
@@ -380,7 +382,7 @@ export const sendMessageLogic = async (
             }
         };
 
-        if (Array.isArray(chat.participants) && chat.participants.length > 0) {
+        if (!isDuplicateMessage && Array.isArray(chat.participants) && chat.participants.length > 0) {
             await Promise.all(chat.participants.map(handleMessageDelivery));
         }
 
@@ -420,17 +422,17 @@ export const saveMediaMessageAsync = async (
     try {
         const io = getIo()
         const savedMessage = await savedMessageOneToOne(
-            chatId, 
-            new mongoose.Types.ObjectId(sender), 
-            content, 
-            type, 
+            chatId,
+            new mongoose.Types.ObjectId(sender),
+            content,
+            type,
             fileUrls,
             tempMessageId,
             deliveryStatus,
             isRead,
             messageStatus,
             replyToMessageId,
-            
+
             mediaDetails.map((file:any) => ({
                 url: file.url,
                 mimeType: file.mimeType,
@@ -439,6 +441,11 @@ export const saveMediaMessageAsync = async (
             })),
             messageCreatedAt,
         );
+
+        if ((savedMessage as any).isDuplicate) {
+            loggerMsg(`Duplicate message save skipped for messageId ${tempMessageId} — already saved`, "debug");
+            return { savedMessage, isDuplicate: true };
+        }
 
         const chat = await chatSchema.findById(chatId);
         if (chat) {
@@ -449,8 +456,10 @@ export const saveMediaMessageAsync = async (
 
         }
         loggerMsg(`Media message saved to database: ${savedMessage._id}`, "debug");
+        return { savedMessage, isDuplicate: false };
     } catch (error) {
         console.error("Error saving media message asynchronously:", error);
+        return { savedMessage: null, isDuplicate: false };
     }
 };
 

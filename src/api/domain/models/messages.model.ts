@@ -120,10 +120,25 @@ export const savedMessageOneToOne = async (
     createdAt: messageCreatedAt || new Date()
   });
   loggerMsg("Saved messaes in db","debug")
-  
-  const savedMessage = await newMessage.save();
 
-  return savedMessage;
+  try {
+    const savedMessage = await newMessage.save();
+    return savedMessage;
+  } catch (error: any) {
+    if (error?.code === 11000 && error?.keyPattern?.messageId) {
+      // Same tempMessageId already saved — happens when the REST and
+      // Socket.IO send-message paths (or a client retry) both fire for the
+      // same client-generated message. Return the existing row, flagged as
+      // a duplicate, instead of throwing, so the caller can skip
+      // re-delivering (duplicate socket emit + duplicate push notification).
+      const existing = await messageSchema.findOne({ messageId: tempMessageId });
+      if (existing) {
+        (existing as any).isDuplicate = true;
+        return existing;
+      }
+    }
+    throw error;
+  }
 };
 
 // one to one chat messages

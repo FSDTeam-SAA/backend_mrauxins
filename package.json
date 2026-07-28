@@ -13,7 +13,8 @@
       "rebuild": "npm run build",
       "typeorm": "typeorm-ts-node-commonjs",
       "swagger-autogen": "ts-node ./src/swagger.ts",
-      "migrate:dedupe-device-tokens": "ts-node src/scripts/dedupeDeviceTokens.ts"
+      "migrate:dedupe-device-tokens": "ts-node src/scripts/dedupeDeviceTokens.ts",
+      "migrate:dedupe-messages": "ts-node src/scripts/dedupeDuplicateMessages.ts"
    },
    "keywords": [],
    "author": "",

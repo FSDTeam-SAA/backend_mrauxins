@@ -63,12 +63,13 @@ export const deleteDeviceTokenApiLogic = async(
 
 export const replaceFcmToken = async(
     userId: string,
-    token: string,
+    token: string | undefined,
     deviceType: string,
+    voipToken: string | undefined,
     callback:(error:any,result: any) => void
 ) => {
     try {
-        await saveDeviceToken(userId,token,deviceType)
+        await saveDeviceToken(userId,token,deviceType,voipToken)
         return callback(null, "Update successfully.")
     } catch (error) {
         return callback({
@@ -80,7 +81,7 @@ export const replaceFcmToken = async(
 }
 export const getUserTokens = async(userId: string) => {
     const tokens = await deviceToken.find({userId})
-    return tokens.map((token) => token.deviceToken)
+    return tokens.map((token) => token.deviceToken).filter((token): token is string => Boolean(token))
 }
 
 interface notificationPayload {
