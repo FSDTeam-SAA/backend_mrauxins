@@ -130,7 +130,7 @@ export const registerConnectionHandlers = (io: Server, socket: Socket) => {
   socket.on("disconnect", (reason) => {
     for (const userId in userSocketMap) {
       if (userSocketMap[userId] === socket.id) {
-        // Can be kept for cleanup or debugging if uncommented in the future
+        delete userSocketMap[userId];
       }
     }
   });

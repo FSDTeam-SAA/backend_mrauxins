@@ -851,16 +851,19 @@ export const registerMessageHandlers = (io: Server, socket: Socket) => {
 
       await Promise.all(
         senders.map(async (sender: any) => {
-          const senderSocketId = userSocketMap[sender._id.toString()];
-          if (senderSocketId) {
-            loggerMsg(`Notifying sender ${sender._id.toString()} (Socket ID: ${senderSocketId})`, "debug");
-            io.to(senderSocketId).emit("message_status", {
-              chatId,
-              userId,
-              status: "read",
-              lastMessageId
-            });
-          }
+          // `sender` here is a raw ObjectId from chat.participants (not a
+          // populated user doc — it has no `._id`), and every connection
+          // already joins a room named after its own userId on `joinChat`
+          // (connection.ts). Emitting to that room avoids relying on
+          // userSocketMap's single-slot cache, which can hold a stale
+          // socket id after a reconnect.
+          loggerMsg(`Notifying sender ${sender.toString()}`, "debug");
+          io.to(sender.toString()).emit("message_status", {
+            chatId,
+            userId,
+            status: "read",
+            lastMessageId
+          });
         })
       );
     } catch (error) {
