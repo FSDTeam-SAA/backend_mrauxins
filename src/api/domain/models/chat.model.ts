@@ -3686,7 +3686,12 @@ export const updateGroupInfoLogic = async (
 
         await chat.save();
 
-        // Broadcast isSendMessage changes to all group participants in real-time
+        // Broadcast isSendMessage changes to all group participants in real-time.
+        // Emit to each participant's own room (joined as their userId on
+        // connect — see connection.ts's joinChat) rather than a single cached
+        // socket id from userSocketMap: the cached id can be stale or missing
+        // after a reconnect or on a second device, which silently dropped
+        // this event and left members unable to see the permission flip live.
         if (isSendMessage !== undefined) {
             const io = getIo();
             const participants = await chatParticipantSchema.find({
@@ -3696,13 +3701,10 @@ export const updateGroupInfoLogic = async (
             for (const participant of participants) {
                 const participantId = participant.userId.toString();
                 if (participantId === userId) continue;
-                const socketId = userSocketMap[participantId];
-                if (socketId) {
-                    io.to(socketId).emit("group_send_permission_updated", {
-                        chatId: chat._id,
-                        isSendMessage: chat.isSendMessage,
-                    });
-                }
+                io.to(participantId).emit("group_send_permission_updated", {
+                    chatId: chat._id,
+                    isSendMessage: chat.isSendMessage,
+                });
             }
         }
 
