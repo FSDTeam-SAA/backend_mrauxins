@@ -974,6 +974,13 @@ export const getConversationsLogic = async (
                             else: "$isSendMessage",
                         },
                     },
+                    isGroupProfilePhoto: {
+                        $cond: {
+                            if: { $in: [userObjectId, "$admins"] },
+                            then: true,
+                            else: "$isGroupProfilePhoto",
+                        },
+                    },
                     createdBy:{
                         $cond:{
                             if:{$in:["$type", ["group","channel"]] },
@@ -1339,6 +1346,13 @@ export const getConversationsLogic = async (
                             if: { $in: [userObjectId, "$admins"] },
                             then: true,
                             else: "$isSendMessage",
+                        },
+                    },
+                    isGroupProfilePhoto: {
+                        $cond: {
+                            if: { $in: [userObjectId, "$admins"] },
+                            then: true,
+                            else: "$isGroupProfilePhoto",
                         },
                     },
                     createdBy:{
@@ -1757,6 +1771,13 @@ export const getForwardedConversationsLogic = async (
                             if: { $in: [userObjectId, "$admins"] },
                             then: true,
                             else: "$isSendMessage",
+                        },
+                    },
+                    isGroupProfilePhoto: {
+                        $cond: {
+                            if: { $in: [userObjectId, "$admins"] },
+                            then: true,
+                            else: "$isGroupProfilePhoto",
                         },
                     },
                     createdBy:{
@@ -2334,7 +2355,7 @@ export const createGroupLogic = async (
     callback: (error: any, result: any) => void
 ) => {
     try {
-        const { chatType, groupName, description, privacy, admins, participants, isProfilePhoto, isSendMessage, hideMembersInfo, hideNewMembersMessage, restrictContentSharing } = reqBody;
+        const { chatType, groupName, description, privacy, admins, participants, isProfilePhoto, isSendMessage, hideMembersInfo, hideNewMembersMessage, restrictContentSharing, isGroupProfilePhoto } = reqBody;
 
         const groupCreator = await userSchema.findById(creatorId).select("_id name userName profilePicture");
 
@@ -2370,6 +2391,7 @@ export const createGroupLogic = async (
             hideMembersInfo: toBoolean(hideMembersInfo),
             hideNewMembersMessage: toBoolean(hideNewMembersMessage),
             restrictContentSharing: toBoolean(restrictContentSharing),
+            isGroupProfilePhoto: toBoolean(isGroupProfilePhoto, true),
             inviteLink: createInviteLink(newChatId.toString()),
             encryptedAESKey: aesKey,
             isFirstMessage:1
