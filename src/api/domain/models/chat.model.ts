@@ -2804,8 +2804,12 @@ export const assignAdminLogic = async (
             return callback({ status: 400, code: "UNAUTHORIZED", message: "You are not authorized to assign admins" }, null);
         }
 
-        // Check if the user is a participant
-        if (!chat.participants.some((participant) => participant.toString() === userId.toString())) {
+        // Check if the user is a currently-active participant. ChatParticipant.isRemoved
+        // is the source of truth for active membership — chat.participants can lag behind
+        // it (e.g. it's never pruned when someone leaves/is removed), so checking the raw
+        // array alone would let a former/never-joined member be promoted to admin.
+        const activeParticipant = await chatParticipantSchema.findOne({ chatId, userId, isRemoved: false }).lean();
+        if (!activeParticipant) {
             return callback({ status: 400, code: "USER_NOT_PARTICIPANT", message: "User must be a participant of the group" }, null);
         }
 
@@ -2985,6 +2989,11 @@ export const leaveGroupLogic = async (
             group.admins = group.admins.filter((adminId) => adminId.toString() !== userId);
         }
 
+        // ✅ Prune the leaving user from the raw participants array too — otherwise it
+        // stays in group.participants forever (only ChatParticipant.isRemoved was set
+        // above), which lets a former member still pass participant checks elsewhere.
+        group.participants = group.participants.filter((participant) => participant.toString() !== userId);
+
         // ✅ Get active participants (users who are not removed)
         const activeParticipants = await chatParticipantSchema.find({
             chatId,
@@ -3150,8 +3159,9 @@ export const removeMemberLogic = async (
             );
         }
 
-        // ✅ Remove the member from the group's admin list if they were an admin
+        // ✅ Remove the member from the group's admin and participants lists
         group.admins = group.admins.filter((adminId) => adminId.toString() !== memberId);
+        group.participants = (group.participants || []).filter((participantId) => participantId.toString() !== memberId);
         await group.save();
 
         const removedMember = await userSchema.findById(memberId).select("name");
