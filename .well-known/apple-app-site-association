@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["RLD3VG9UZP.com.freshcodes.twoonetwomessenger"],
+        "components": [
+          { "/": "/join/*", "comment": "Matches invite links like /join/<chatId>/<name>" }
+        ]
+      }
+    ]
+  }
+}

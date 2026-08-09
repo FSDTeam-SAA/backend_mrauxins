@@ -375,6 +375,11 @@ export const createServer = (): void => {
         const filePath = path.resolve(process.cwd(), ".well-known", "assetlinks.json");
         res.sendFile(filePath);
     })
+    app.get("/.well-known/apple-app-site-association",(req, res,next) => {
+        const filePath = path.resolve(process.cwd(), ".well-known", "apple-app-site-association");
+        res.type("application/json");
+        res.sendFile(filePath);
+    })
     app.use("/api", createRouter());
 
     // setupSwagger(app)

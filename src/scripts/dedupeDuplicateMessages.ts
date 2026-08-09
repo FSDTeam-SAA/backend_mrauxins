@@ -26,7 +26,6 @@ import mongoose from "mongoose";
 import connectDB from "../api/config/db";
 import messageSchema from "../api/domain/schema/message.schema";
 import chatSchema from "../api/domain/schema/chat.schema";
-import { Channel } from "../api/domain/schema/channel.schema";
 
 const run = async () => {
     await connectDB();
@@ -47,9 +46,6 @@ const run = async () => {
 
     const referencedIds = new Set<string>();
     for (const doc of await chatSchema.find({ lastMessage: { $ne: null } }).select("lastMessage")) {
-        if (doc.lastMessage) referencedIds.add(doc.lastMessage.toString());
-    }
-    for (const doc of await Channel.find({ lastMessage: { $ne: null } }).select("lastMessage")) {
         if (doc.lastMessage) referencedIds.add(doc.lastMessage.toString());
     }
 

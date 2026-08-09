@@ -9,7 +9,6 @@ import {  createNewChat, getConversations,  getMessagesOfChatID,  sendMessage, u
 import { getSavedMessages, saveMessage, sendSavedMessages, unsaveMessage } from "../controllers/save.messages.controller";
 import { addMembers,createGroup, groupConversations, assignAdminToGroup, leaveGroup, removeMember, getGroupInfo, deleteGroup, updateGroupInfo, revokeGroupInviteLink, joinGroupByInvite, searchPublicGroups, searchDatabase, checkInviteName} from "../controllers/group.controller";
 import { createStory, deleteStories, getAllStories, getAllStories1, getUserStoriesWithViewerDetails, getUserStoriesWithViewerDetails1, viewStory } from "../controllers/stories.controller";
-import { addMemberToChannel, createChannel, deleteChannel, generateInviteLink, getChannelDetails, joinChannel, leaveChannel, listChannels, removeMemberFromChannel, sentMessageToChannel, updateChannelDetails } from "../controllers/channel.controller";
 import { deleteDeviceToken, replaceToken, saveDeviceTokenApi } from "../controllers/devicetoken.controller";
 import path from "path";
 import {  getCallHistoryLists, updateCallStatus } from "../controllers/call.history.controller";
@@ -166,35 +165,6 @@ export const appRoute = (router: express.Router): void => {
         /** ++++++++++++++++++++++++++ EC Private & Public Key ++++++++++++++++++++++++++++++ */
         route.post("/generate/eckeys/:userId",saveEcKeys)
         route.get("/get-public/key/:userId",getPublicKey)
-        /** ++++++++++++++++++++++++++ Channel Api ++++++++++++++++++++++++++++++ */
-        // create channel api
-        route.post("/create-channel", protectedRoute, upload.array("files",5), createChannel);
-        // get channel details api
-        route.get("/channels/:channelId", protectedRoute, getChannelDetails);
-        // List All Channel
-        route.get("/channels", protectedRoute, listChannels);
-        // join channel via public or invite link for private channel api
-        route.post("/channels/join/:channelId", protectedRoute, joinChannel);
-        // leave a channel api
-        route.post("/channels/leave/:channelId", protectedRoute, leaveChannel);
-        
-        // update channel details (admin only) api
-        route.put("/channels/:channelId", protectedRoute, upload.array("files",5), updateChannelDetails);
-
-        // add member to a channel (admins only) api
-        route.post("/channels/members/add/:channelId", protectedRoute, addMemberToChannel);
-        // remove member from a channel (admins only) api
-        route.post("/channels/:channelId", protectedRoute, removeMemberFromChannel)
-        
-        // generate an invite link (for private channels) api.
-        // route.post("/channels/:channelId/invite", generateInviteLink);
-        
-        // delete channel (admins only) api
-        route.delete("/channels/:channelId", protectedRoute, deleteChannel)
-
-        // sent message into channel api
-        route.post("/channels/message/sent",protectedRoute, upload.array("files",5), sentMessageToChannel)
-
         /** ++++++++++++++++++++++++++ DeviceToken Api ++++++++++++++++++++++++++++++ */
         route.delete("/delete-token", protectedRoute, deleteDeviceToken)
         route.post("/replace-token", optionalAuth, replaceToken);

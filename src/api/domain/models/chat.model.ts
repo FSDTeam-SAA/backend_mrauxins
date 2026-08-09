@@ -3752,7 +3752,10 @@ export const revokeGroupInviteLinkLogic = async (
     callback: (error: any, result: any) => void
 ) => {
     try {
-        const chat = await chatSchema.findOne({ _id: chatId, type: ChatType.GROUP });
+        const chat = await chatSchema.findOne({
+            _id: chatId,
+            type: { $in: [ChatType.GROUP, ChatType.CHANNEL] },
+        });
 
         if (!chat) {
             return callback(
