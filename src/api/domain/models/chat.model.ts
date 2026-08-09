@@ -12,7 +12,8 @@ import chatParticipantSchema from "../schema/chat.participant.schema";
 import { BlockedUser } from "../schema/blockuser.schema";
 import { TenantAwareAuth } from "firebase-admin/lib/auth/tenant-manager";
 import {v4 as uuidv4} from "uuid"
-import { CLICK_NOTIFICATION_TYPE, NotificationType } from "../schema/notification.schema";
+import { CLICK_NOTIFICATION_TYPE, InviteStatus, NotificationType } from "../schema/notification.schema";
+import notificationSchema from "../schema/notification.schema";
 import { env } from "../../../infrastructure/env";
 import { buildGroupInfoPayload, buildSenderPayload } from "../../helper/notificationPayload";
 
@@ -2525,92 +2526,36 @@ export const addMembersLogic = async (
         const validMembers = await userSchema.find({ _id: { $in: newMemberIds } }).select("_id name").lean();
         if (!validMembers.length) return callback({ status: 400, code: "INVALID_MEMBERS", message: "No valid members found to add." }, null);
 
-        chat.participants = chat.participants || [];
+        const existingParticipantIds = new Set((chat.participants || []).map(id => id.toString()));
 
-        const existingParticipants = new Set(chat.participants.map(id => id.toString()));
+        // Skip anyone who's already an active participant of this chat
+        const invitableMembers = validMembers.filter(member => !existingParticipantIds.has(member._id.toString()));
 
-        // Check if any of the new members were previously removed
-        const existingChatParticipants = await chatParticipantSchema.find({ chatId, userId: { $in: newMemberIds } }).lean();
+        if (invitableMembers.length === 0) {
+            return callback(null, { status: 1, message: "Selected users are already members of this chat.", data: { chatId: chat._id, invitedCount: 0 } });
+        }
 
-        const rejoiningMembers: any[] = [];
-        const newMembers: any[] = [];
+        // Skip anyone who already has a pending invite to this chat, so re-selecting
+        // them doesn't spam a second invite/notification
+        const existingPendingInvites = await notificationSchema.find({
+            chatId: chat._id,
+            receiverId: { $in: invitableMembers.map(m => m._id) },
+            type: { $in: [NotificationType.GROUP_INVITE, NotificationType.CHANNEL_INVITE] },
+            status: InviteStatus.PENDING
+        }).select("receiverId").lean();
+        const alreadyInvitedIds = new Set(existingPendingInvites.map(n => n.receiverId.toString()));
 
-        validMembers.forEach(member => {
-            const existingParticipant = existingChatParticipants.find(p => p.userId.toString() === member._id.toString());
+        const membersToInvite = invitableMembers.filter(member => !alreadyInvitedIds.has(member._id.toString()));
 
-            if (existingParticipant) {
-                if (existingParticipant.isRemoved) {
-                    rejoiningMembers.push(member);
-                }
-            } else {
-                newMembers.push(member);
-            }
+        if (membersToInvite.length > 0) {
+            await sendInviteNotifications(chat, loggedinUser, io, membersToInvite);
+        }
+
+        return callback(null, {
+            status: 1,
+            message: membersToInvite.length > 0 ? "Invitations sent." : "Selected users already have a pending invitation.",
+            data: { chatId: chat._id, invitedCount: membersToInvite.length }
         });
-
-        // Merge rejoining and new members
-        const allAddedMembers = [...rejoiningMembers, ...newMembers];
-
-        if (allAddedMembers.length === 0) {
-            await sendNotificationsAndEmitEvents(chat, loggedinUser, io, [], allAddedMembers);
-            return callback(null, { status: 1, message: "No new members added, but notifications sent.", data: { chatId: chat._id, updatedParticipants: chat.participants } });
-        }
-
-        // Update participants array (only if new members are there)
-        newMembers.forEach(member => existingParticipants.add(member._id.toString()));
-        chat.participants = Array.from(existingParticipants).map(id => new mongoose.Types.ObjectId(id));
-        await chat.save();
-
-        // Update ChatParticipantSchema (set isRemoved = false for rejoining users)
-        const bulkUpdates = allAddedMembers.map(member => ({
-            updateOne: {
-                filter: { chatId, userId: member._id },
-                update: { 
-                    $set: { isRemoved: false, rejoinedAt: new Date(), lastClearedMessageId: null }
-                },
-                upsert: true
-            }
-        }));
-        await chatParticipantSchema.bulkWrite(bulkUpdates);
-
-        // Create system messages
-        const systemMessages = chat.hideNewMembersMessage ? [] : allAddedMembers.map(member => ({
-            chatId,
-            sender: {
-                _id: loggedinUser?._id,
-                name: loggedinUser?.name,
-                userName: loggedinUser?.userName,
-                profilePicture: loggedinUser?.profilePicture,
-                lastSeen: loggedinUser?.lastSeen,
-                bio:loggedinUser?.bio, 
-                email:loggedinUser?.email, 
-                isOnline:loggedinUser?.isOnline, 
-                countryCode:loggedinUser?.countryCode, 
-                countryISOCode:loggedinUser?.countryISOCode,
-                profilePrivacy: loggedinUser?.profilePrivacy
-            },
-            content: null,
-            type: "system_message",
-            status: "read",
-            createdAt: new Date().toISOString(),
-            isRead: true,
-            messageId: messageId || new mongoose.Types.ObjectId().toString(),
-            systemMessage: {
-                _id: new mongoose.Types.ObjectId(),
-                name: "System",
-                message: rejoiningMembers.some(m => m._id.equals(member._id))
-                    ? `${member.name} rejoined the group`
-                    : `${member.name} was added by admin`,
-                profilePicture: null
-            }
-        }));
-        if (systemMessages.length > 0) {
-            await messageSchema.insertMany(systemMessages);
-        }
-
-        // Send notifications and emit socket events to all users
-        await sendNotificationsAndEmitEvents(chat, loggedinUser, io, systemMessages, allAddedMembers);
-
-        return callback(null, { status: 1, message: "Members added successfully.", data: { chatId: chat._id, updatedParticipants: chat.participants } });
     } catch (error: any) {
         console.error("Error in addMembersLogic:", error);
         return callback({ status: 500, code: "INTERNAL_SERVER_ERROR", message: error.message || "An unexpected error occurred." }, null);
@@ -2618,53 +2563,95 @@ export const addMembersLogic = async (
 };
 
 
-// Function to send notifications and emit socket events
-const sendNotificationsAndEmitEvents = async (chat: any, loggedinUser: any, io: any, systemMessages: any[], allAddedMembers: any[]) => {
+// Sends a pending GROUP_INVITE/CHANNEL_INVITE notification (push + in-app) to
+// each invited member. Membership itself is only granted once the invitee
+// accepts — see finalizeMembership().
+const sendInviteNotifications = async (chat: any, loggedinUser: any, io: any, invitedMembers: any[]) => {
     const typeName = chat.type === ChatType.GROUP ? "group" : "channel";
     const notifType = chat.type === ChatType.GROUP ? NotificationType.GROUP_INVITE : NotificationType.CHANNEL_INVITE;
-
-    const activeParticipants = await chatParticipantSchema.find({ chatId: chat._id, isRemoved: false }).select("userId").lean();
-    const activeUserIds = activeParticipants.map(p => p.userId.toString());
-    const addedMemberIds = allAddedMembers.map(m => m._id.toString());
     const adminId = loggedinUser._id.toString();
 
-    // Send push + in-app notification ONLY to newly added members
-    await Promise.all(addedMemberIds.map(async (memberId) => {
+    await Promise.all(invitedMembers.map(async (member) => {
+        const memberId = member._id.toString();
         const user = await userSchema.findById(memberId).select("_id isStopNotification isMuteNotification");
         if (!user || user.isStopNotification) return;
 
         await sentPushNotificationToUser(memberId, {
             title: chat.groupName,
-            body: `${loggedinUser.name || "Admin"} added you to this ${typeName}`,
+            body: `${loggedinUser.name || "Admin"} invited you to join this ${typeName}`,
             chat_id: chat._id.toString(),
             click_action: CLICK_NOTIFICATION_TYPE,
             sender: JSON.stringify(buildSenderPayload(loggedinUser)),
             type: notifType,
-            content: `${loggedinUser.name || "Admin"} added you to "${chat.groupName}"`,
+            content: `${loggedinUser.name || "Admin"} invited you to join "${chat.groupName}"`,
             groupInfo: JSON.stringify(buildGroupInfoPayload(chat)),
             senderId: adminId,
             receiverId: memberId,
             isMuteNotification: user.isMuteNotification,
         });
     }));
+};
 
-    // Emit socket events to all active participants
-    await Promise.all(activeUserIds.map(async (userId) => {
-        const socketId = userSocketMap[userId];
+// Grants chat membership to a single user who accepted a pending invite:
+// adds them to chat.participants/ChatParticipant, posts the "X joined" system
+// message, and emits the same socket events the old instant-add flow used to
+// emit so other participants see the join live.
+export const finalizeMembership = async (chat: any, member: { _id: mongoose.Types.ObjectId, name?: string }, io: any) => {
+    const existingParticipant = await chatParticipantSchema.findOne({ chatId: chat._id, userId: member._id }).lean();
+    const isRejoining = !!existingParticipant?.isRemoved;
+
+    const existingParticipantIds = new Set((chat.participants || []).map((id: any) => id.toString()));
+    if (!existingParticipantIds.has(member._id.toString())) {
+        chat.participants = [...(chat.participants || []), member._id];
+        await chat.save();
+    }
+
+    await chatParticipantSchema.updateOne(
+        { chatId: chat._id, userId: member._id },
+        { $set: { isRemoved: false, rejoinedAt: new Date(), lastClearedMessageId: null } },
+        { upsert: true }
+    );
+
+    let systemMessage: any = null;
+    if (!chat.hideNewMembersMessage) {
+        systemMessage = {
+            chatId: chat._id,
+            sender: {
+                _id: member._id,
+                name: member.name,
+            },
+            content: null,
+            type: "system_message",
+            status: "read",
+            createdAt: new Date().toISOString(),
+            isRead: true,
+            messageId: new mongoose.Types.ObjectId().toString(),
+            systemMessage: {
+                _id: new mongoose.Types.ObjectId(),
+                name: "System",
+                message: isRejoining ? `${member.name} rejoined the group` : `${member.name} joined the group`,
+                profilePicture: null
+            }
+        };
+        await messageSchema.create(systemMessage);
+    }
+
+    const activeParticipants = await chatParticipantSchema.find({ chatId: chat._id, isRemoved: false }).select("userId").lean();
+    await Promise.all(activeParticipants.map(async (participant) => {
+        const socketId = userSocketMap[participant.userId.toString()];
         if (!socketId) return;
 
-        if (addedMemberIds.includes(userId)) {
+        if (participant.userId.toString() === member._id.toString()) {
             io.to(socketId).emit("added_to_group", {
                 chatId: chat._id,
                 groupName: chat.groupName,
-                addedBy: loggedinUser,
                 groupInfo: chat
             });
         }
 
-        systemMessages.forEach(message => {
-            io.to(socketId).emit("receive_system_message", message);
-        });
+        if (systemMessage) {
+            io.to(socketId).emit("receive_system_message", systemMessage);
+        }
     }));
 };
 

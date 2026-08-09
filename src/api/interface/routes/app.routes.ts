@@ -12,7 +12,7 @@ import { createStory, deleteStories, getAllStories, getAllStories1, getUserStori
 import { deleteDeviceToken, replaceToken, saveDeviceTokenApi } from "../controllers/devicetoken.controller";
 import path from "path";
 import {  getCallHistoryLists, updateCallStatus } from "../controllers/call.history.controller";
-import { clearCallLog, clearNotification, getNotifications, updateUnreadMessage } from "../controllers/notifications.controller";
+import { clearCallLog, clearNotification, getNotifications, respondToInvite, updateUnreadMessage } from "../controllers/notifications.controller";
 import { getPublicKey, saveEcKeys } from "../controllers/ec.controller";
 import crypto from "crypto";
 import { blockedUsers, blockUser, unBlockUser } from "../controllers/blockuser.controller";
@@ -158,6 +158,7 @@ export const appRoute = (router: express.Router): void => {
         route.get("/get-notifications", protectedRoute, getNotifications)
         route.get("/get-callhistory", protectedRoute, getCallHistoryLists)
         route.put("/update-unread-message", protectedRoute, updateUnreadMessage)
+        route.put("/notification/respond-invite", protectedRoute, respondToInvite)
         route.delete("/clear-call-log",protectedRoute, clearCallLog)
 
         route.delete("/clear-notification",protectedRoute, clearNotification)

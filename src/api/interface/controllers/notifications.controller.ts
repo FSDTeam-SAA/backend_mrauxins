@@ -1,6 +1,6 @@
 import {Request, Response} from "express"
 import { successCreated, successResponse } from "../../helper/apiResponse";
-import { clearCallLogLogic, clearNotificationApi, getNotificationLists, markNotificationsAsRead } from "../../domain/models/notifications.model";
+import { clearCallLogLogic, clearNotificationApi, getNotificationLists, markNotificationsAsRead, respondToInviteLogic } from "../../domain/models/notifications.model";
 
 export const getNotifications = async(req:Request, res:Response) => {
     const userId = req.user.userId;
@@ -37,6 +37,29 @@ export const updateUnreadMessage = async(req:Request, res:Response) => {
     })
 }
 
+
+export const respondToInvite = async(req:Request, res:Response) => {
+    const userId = req.user.userId;
+    const { notificationId, action } = req.body;
+
+    if (!notificationId || !action) {
+        return res.status(400).json({
+            code: "INVALID_INPUT",
+            message: "notificationId and action are required.",
+        });
+    }
+
+    respondToInviteLogic(userId, notificationId, action, (error, result) => {
+        if(error){
+            return res.status(error.status).json({
+                status:error?.status,
+                code: error?.code,
+                message: error?.message
+            });
+        }
+        return successResponse(res,"Invitation response recorded.",result)
+    })
+}
 
 export const clearCallLog = async(req:Request, res:Response) => {
     const userId = req.user.userId;

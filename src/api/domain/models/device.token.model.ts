@@ -4,7 +4,7 @@ import { saveDeviceToken } from "../../helper/helper";
 import { loggerMsg } from "../../lib/logger";
 import admin, { isFirebaseInitialized } from "../../services/firebase";
 import { deviceToken } from "../schema/devicetoken.schema";
-import notificationSchema, { NotificationType } from "../schema/notification.schema";
+import notificationSchema, { InviteStatus, NotificationType } from "../schema/notification.schema";
 import { ChatType } from "../schema/chat.schema";
 import { CallType } from "../schema/callhistory.schema";
 import { getIo } from "../../../infrastructure/webserver/express/v1";
@@ -112,25 +112,107 @@ interface notificationPayload {
     isMuteNotification?:boolean
 }
 
+// Persists the in-app Notification record (and pushes the updated unread
+// count over the socket) independently of whether the user has any FCM/APNs
+// device tokens registered — a user with push disabled/no device should
+// still see the notification in-app, and pending invites in particular must
+// exist in the DB regardless of push deliverability so they can be accepted.
+const persistInAppNotification = async (io: any, {
+    type, call_type, chat_id, senderId, receiverId, content
+}: Pick<notificationPayload, "type" | "call_type" | "chat_id" | "senderId" | "receiverId" | "content">): Promise<void> => {
+    const receiver = receiverId?.toString() || "";
+
+    if(type === NotificationType.NEW_GROUP_CREATED || type === NotificationType.CREATE_NEW_CHANNEL || type === NotificationType.ASSIGN_ADMIN || type === NotificationType.CHANNEL_INVITE || type === NotificationType.DELETE_GROUP || type === NotificationType.DELETE_CHANNEL || type === NotificationType.GROUP_INVITE || type === NotificationType.REMOVED_GROUP || type === NotificationType.REMOVED_CHANNEL || type === NotificationType.LEAVE_GROUP || type === NotificationType.LEAVE_CHANNEL || type === NotificationType.AGORA_END_CALL){
+        const resolvedType = type === NotificationType.NEW_GROUP_CREATED
+            ? NotificationType.CREATE_NEW_GROUP : type == NotificationType.CREATE_NEW_CHANNEL
+            ? NotificationType.CREATE_NEW_CHANNEL :  type === NotificationType.ASSIGN_ADMIN
+            ? NotificationType.ASSIGN_ADMIN : type === NotificationType.CHANNEL_INVITE
+            ? NotificationType.CHANNEL_INVITE : type === NotificationType.GROUP_INVITE
+            ? NotificationType.GROUP_INVITE: type === NotificationType.DELETE_GROUP
+            ? NotificationType.DELETE_GROUP : type === NotificationType.DELETE_CHANNEL
+            ? NotificationType.DELETE_CHANNEL : type === NotificationType.REMOVED_GROUP
+            ? NotificationType.REMOVED_GROUP : type === NotificationType.REMOVED_CHANNEL
+            ? NotificationType.REMOVED_CHANNEL : type === NotificationType.LEAVE_GROUP
+            ? NotificationType.LEAVE_GROUP : type === NotificationType.LEAVE_CHANNEL
+            ? NotificationType.LEAVE_CHANNEL : type === NotificationType.AGORA_END_CALL
+            ? NotificationType.AGORA_END_CALL : NotificationType.OTHER;
+
+        const notification = new notificationSchema({
+            receiverId:new mongoose.Types.ObjectId(receiverId),
+            senderId:new mongoose.Types.ObjectId(senderId),
+            chatId:chat_id,
+            type: resolvedType,
+            status: (resolvedType === NotificationType.GROUP_INVITE || resolvedType === NotificationType.CHANNEL_INVITE) ? InviteStatus.PENDING : InviteStatus.NONE,
+            content:content
+        });
+        await notification.save();
+
+        const unreadCount = await notificationSchema.countDocuments({
+                    receiverId: receiverId,
+                    isRead: false
+                });
+                const receiverSocketId = userSocketMap[receiver];
+                // Emit the unread count back to the user
+                io.to(receiverSocketId).emit("unread-notification-count-response", {
+                    unreadCount
+                });
+    }
+
+    if(call_type === CallType.VOICE || call_type === CallType.VIDEO || call_type === CallType.VIDEO_GROUP_CALL || call_type === CallType.VOICE_GROUP_CALL){
+        const notification = new notificationSchema({
+            receiverId:new mongoose.Types.ObjectId(receiverId),
+            senderId:new mongoose.Types.ObjectId(senderId),
+            chatId:chat_id,
+            type:call_type === CallType.VIDEO
+                ? NotificationType.VIDEO : call_type === CallType.VOICE
+                ? NotificationType.VOICE : call_type === CallType.VIDEO_GROUP_CALL
+                ? NotificationType.VIDEO_GRPOP_CALL : NotificationType.VOICE_GRPOP_CALL,
+            content:call_type === CallType.VIDEO
+            ? "Video Call Notification" : call_type === CallType.VOICE
+            ? "Voice Call Notification" : call_type === CallType.VIDEO_GROUP_CALL
+            ? "Group Video Call Notification" : call_type === CallType.VOICE_GROUP_CALL
+            ? "Group Voice Call Notification" : "Other Notification"
+        });
+        await notification.save();
+
+        const unreadCount = await notificationSchema.countDocuments({
+                    receiverId: receiverId,
+                    isRead: false
+                });
+
+                const receiverSocketId = userSocketMap[receiver];
+                if(receiverSocketId){
+                    // Emit the unread count back to the user
+                    io.to(receiverSocketId).emit("unread-notification-count-response", {
+                        unreadCount
+                    });
+
+                }
+    }
+};
+
 // Sent Push Notification to all devices
 export const sentPushNotificationToUser = async (userId: string, {
     title, body, click_action, type, chat_id, story_id, sender,channel_name,token,call_type,sender_id,receiver_id,content,temp_message_id, groupInfo,chatType,groupName, groupImage, senderId,receiverId, callId, encryptedAESKey, deviceType, isInComeingCall, isMuteNotification}: notificationPayload
 ):Promise<void> => {
 
     try {
+        const io = getIo()
+
+        await persistInAppNotification(io, { type, call_type, chat_id, senderId, receiverId, content });
+
         if(!isFirebaseInitialized){
             loggerMsg(`Firebase Admin SDK is not initialized — skipping push notification for user ${userId}`, "warn");
             return;
         }
 
-        const io = getIo()
         const tokens = await getUserTokens(userId);
-        
+
         if(tokens.length === 0){
             loggerMsg(`No devices tokens found for the user. \n${userId}`,"debug")
             return;
         }
-        
+
         const message :any= {
             notification : {
                 title,
@@ -247,73 +329,7 @@ export const sentPushNotificationToUser = async (userId: string, {
                 });
             });
         });
-        if(type === NotificationType.NEW_GROUP_CREATED || type === NotificationType.CREATE_NEW_CHANNEL || type === NotificationType.ASSIGN_ADMIN || type === NotificationType.CHANNEL_INVITE || type === NotificationType.DELETE_GROUP || type === NotificationType.DELETE_CHANNEL || type === NotificationType.GROUP_INVITE || type === NotificationType.REMOVED_GROUP || type === NotificationType.REMOVED_CHANNEL || type === NotificationType.LEAVE_GROUP || type === NotificationType.LEAVE_CHANNEL || type === NotificationType.AGORA_END_CALL){
-            const notification = new notificationSchema({
-                receiverId:new mongoose.Types.ObjectId(receiverId),
-                senderId:new mongoose.Types.ObjectId(senderId),
-                chatId:chat_id,
-                type: type === NotificationType.NEW_GROUP_CREATED 
-                    ? NotificationType.CREATE_NEW_GROUP : type == NotificationType.CREATE_NEW_CHANNEL
-                    ? NotificationType.CREATE_NEW_CHANNEL :  type === NotificationType.ASSIGN_ADMIN
-                    ? NotificationType.ASSIGN_ADMIN : type === NotificationType.CHANNEL_INVITE
-                    ? NotificationType.CHANNEL_INVITE : type === NotificationType.GROUP_INVITE
-                    ? NotificationType.GROUP_INVITE: type === NotificationType.DELETE_GROUP
-                    ? NotificationType.DELETE_GROUP : type === NotificationType.DELETE_CHANNEL
-                    ? NotificationType.DELETE_CHANNEL : type === NotificationType.REMOVED_GROUP
-                    ? NotificationType.REMOVED_GROUP : type === NotificationType.REMOVED_CHANNEL
-                    ? NotificationType.REMOVED_CHANNEL : type === NotificationType.LEAVE_GROUP
-                    ? NotificationType.LEAVE_GROUP : type === NotificationType.LEAVE_CHANNEL
-                    ? NotificationType.LEAVE_CHANNEL : type === NotificationType.AGORA_END_CALL
-                    ? NotificationType.AGORA_END_CALL : NotificationType.OTHER, 
-                content:content
-            });
-            await notification.save();
-
-            const unreadCount = await notificationSchema.countDocuments({
-                        receiverId: receiverId,
-                        isRead: false
-                    });
-                    const receiver = receiverId?.toString() || ""
-                    const receiverSocketId = userSocketMap[receiver];
-                    // Emit the unread count back to the user
-                    io.to(receiverSocketId).emit("unread-notification-count-response", {
-                        unreadCount
-                    });
-        }
-
-        if(call_type === CallType.VOICE || call_type === CallType.VIDEO || call_type === CallType.VIDEO_GROUP_CALL || call_type === CallType.VOICE_GROUP_CALL){
-            const notification = new notificationSchema({
-                receiverId:new mongoose.Types.ObjectId(receiverId),
-                senderId:new mongoose.Types.ObjectId(senderId),
-                chatId:chat_id,
-                type:call_type === CallType.VIDEO 
-                    ? NotificationType.VIDEO : call_type === CallType.VOICE
-                    ? NotificationType.VOICE : call_type === CallType.VIDEO_GROUP_CALL
-                    ? NotificationType.VIDEO_GRPOP_CALL : NotificationType.VOICE_GRPOP_CALL,
-                content:call_type === CallType.VIDEO 
-                ? "Video Call Notification" : call_type === CallType.VOICE
-                ? "Voice Call Notification" : call_type === CallType.VIDEO_GROUP_CALL
-                ? "Group Video Call Notification" : type === CallType.VOICE_GROUP_CALL 
-                ? "Group Voice Call Notification" : "Other Notification"
-            });
-            await notification.save();
-
-            const unreadCount = await notificationSchema.countDocuments({
-                        receiverId: receiverId,
-                        isRead: false
-                    });
-                    
-                    const receiver = receiverId?.toString() || ""
-                    const receiverSocketId = userSocketMap[receiver];
-                    if(receiverSocketId){
-                        // Emit the unread count back to the user
-                        io.to(receiverSocketId).emit("unread-notification-count-response", {
-                            unreadCount
-                        });
-                        
-                    }
-        }
-        loggerMsg(`Notification saved successfully..`,"debug");
+        loggerMsg(`Push notification sent successfully..`,"debug");
       
 
         // Handle errors or failed tokens. FCM per-token error codes tell us

@@ -39,6 +39,14 @@ export enum NotificationType {
 }
 
 export const CLICK_NOTIFICATION_TYPE = "212_MESSENGER_NOTIFICATION_CLICK"
+
+export enum InviteStatus {
+    NONE = "none",
+    PENDING = "pending",
+    ACCEPTED = "accepted",
+    REJECTED = "rejected",
+}
+
 interface INotification extends Document {
     receiverId : mongoose.Types.ObjectId;
     senderId: mongoose.Types.ObjectId;
@@ -46,6 +54,7 @@ interface INotification extends Document {
     messageId?: mongoose.Types.ObjectId;
     type: NotificationType;
     content?: string;
+    status: InviteStatus;
     isRead: boolean;
     createdAt: Date;
 }
@@ -57,6 +66,7 @@ const NotificationSchema = new Schema<INotification>({
     messageId: { type: mongoose.Schema.Types.ObjectId, ref: "Message" },
     type: { type: String, enum: Object.values(NotificationType), required: true },
     content: { type: String },
+    status: { type: String, enum: Object.values(InviteStatus), default: InviteStatus.NONE },
     isRead: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 });

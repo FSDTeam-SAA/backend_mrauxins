@@ -1,8 +1,11 @@
 import mongoose from "mongoose";
 import { callHistory } from "../schema/callhistory.schema";
-import notificationSchema from "../schema/notification.schema";
+import notificationSchema, { InviteStatus, NotificationType } from "../schema/notification.schema";
 import userSchema from "../schema/user.schema";
 import { getNickNameDetails } from "../../socket/initDemoSocketHandlers";
+import chatSchema from "../schema/chat.schema";
+import { finalizeMembership } from "./chat.model";
+import { getIo } from "../../../infrastructure/webserver/express/v1";
 
 
 
@@ -80,6 +83,7 @@ export const getNotificationLists = async (
                     isRead: 1,
                     type:1,
                     content:1,
+                    status:1,
                     sender: {
                         _id: "$sender._id",
                         name:"$sender.name",
@@ -275,6 +279,67 @@ export const clearCallLogLogic = async(
 }
 
 
+
+export const respondToInviteLogic = async (
+    userId: string,
+    notificationId: string,
+    action: "accept" | "reject",
+    callback: (error: any, result: any) => void
+) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(notificationId)) {
+            return callback({ status: 400, code: "INVALID_NOTIFICATION_ID", message: "Invalid notification id." }, null);
+        }
+        if (action !== "accept" && action !== "reject") {
+            return callback({ status: 400, code: "INVALID_ACTION", message: "Action must be 'accept' or 'reject'." }, null);
+        }
+
+        const notification = await notificationSchema.findById(notificationId);
+        if (!notification) {
+            return callback({ status: 404, code: "NOTIFICATION_NOT_FOUND", message: "Notification not found." }, null);
+        }
+        if (notification.receiverId.toString() !== userId) {
+            return callback({ status: 403, code: "NOT_AUTHORIZED", message: "You are not authorized to respond to this invitation." }, null);
+        }
+        if (notification.type !== NotificationType.GROUP_INVITE && notification.type !== NotificationType.CHANNEL_INVITE) {
+            return callback({ status: 400, code: "NOT_AN_INVITE", message: "This notification is not an invitation." }, null);
+        }
+        if (notification.status !== InviteStatus.PENDING) {
+            return callback({ status: 409, code: "ALREADY_RESPONDED", message: `This invitation has already been ${notification.status}.` }, null);
+        }
+
+        const chat = await chatSchema.findById(notification.chatId);
+        if (!chat) {
+            return callback({ status: 404, code: "CHAT_NOT_FOUND", message: "The group/channel for this invitation no longer exists." }, null);
+        }
+
+        if (action === "accept") {
+            const member = await userSchema.findById(userId).select("_id name").lean();
+            if (!member) {
+                return callback({ status: 404, code: "USER_NOT_FOUND", message: "User not found." }, null);
+            }
+            await finalizeMembership(chat, member, getIo());
+            notification.status = InviteStatus.ACCEPTED;
+            notification.content = `You have joined "${chat.groupName}"`;
+        } else {
+            notification.status = InviteStatus.REJECTED;
+            notification.content = "Invitation rejected";
+        }
+
+        await notification.save();
+
+        return callback(null, notification);
+    } catch (error) {
+        return callback(
+            {
+                status: 500,
+                code: "INTERNAL_SERVER_ERROR",
+                message: error instanceof Error ? error.message : "An unexpected error occurred.",
+            },
+            null
+        );
+    }
+};
 
 export const clearNotificationApi = async (
     userId: string,
